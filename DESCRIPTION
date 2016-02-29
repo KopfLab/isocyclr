@@ -1,0 +1,28 @@
+Package: isocyclr
+Type: Package
+Title: Model isotope fractionation in biogeochemical cycles and pathways
+Version: 0.1
+Date: 2016-01-15
+Author: Sebastian Kopf
+Maintainer: Sebastian Kopf <seb.kopf@gmail.com>
+Description: This package facilitates the modeling of isotopic effects through
+    biogeochemical pathways and cycles including non-steady state and steady-state
+    solutions.
+License: GPL-3
+Roxygen: list(wrap = FALSE)
+URL: https://github.com/sebkopf/isocyclr
+BugReports: https://github.com/sebkopf/isocyclr/issues
+Imports:
+    dplyr,
+    lazyeval,
+    tidyr,
+    ggplot2
+Suggests:
+    testthat,
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
+Collate:
+    'hello.R'
+    'package.R'
+RoxygenNote: 5.0.0
