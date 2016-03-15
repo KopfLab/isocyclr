@@ -23,6 +23,11 @@ Suggests:
     knitr
 VignetteBuilder: knitr
 Collate:
-    'hello.R'
+    'component.R'
+    'isotope.R'
+    'notes.R'
+    'validation.R'
+    'reaction.R'
+    'system.R'
     'package.R'
 RoxygenNote: 5.0.0

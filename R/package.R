@@ -5,5 +5,10 @@
 #' @docType package
 #' @import dplyr lazyeval
 #' @importFrom tidyr gather gather_ extract extract_ spread spread_
-#' @include code.R
+#' @include notes.R
+#' @include system.R
+#' @include reaction.R
+#' @include isotope.R
+#' @include component.R
+#' @include validation.R
 NULL
