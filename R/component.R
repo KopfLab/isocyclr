@@ -1,21 +1,21 @@
 #' Create a reaction for a pathway
-#' @param constant - whether this component has constant concentration and isotopic composition, default is that it can vary
+#' @param variable - whether this component has variable concentration and isotopic composition, default is that it can vary
 #' @param ... the isotopes (refer to by name)
 #' @note non-standard evaluation
 #' @export
-add_component <- function(ip, name, ..., constant = FALSE) {
-  add_component_(ip, name, constant = constant, .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
+add_component <- function(ip, name, ..., variable = TRUE) {
+  add_component_(ip, name, variable = variable, .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
 }
 
 #' add isotopes to a component
 #' @export
 #' @note standard evaluation
-add_component_ <- function(ip, name, ..., .dots = list(), constant = FALSE) {
+add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
   if (!is(ip, "isopath")) stop ("component can only be added to an isopath", call. = FALSE)
   if (!grepl("^\\w+$", name)) stop("only alphanumeric component names allowed: ", name, call. = FALSE)
   ip$components[[name]] <- list(
     name = name,
-    constant = constant,
+    variable = variable,
     isotopes = sapply(c(list(...), .dots), parse_reaction_component)
   )
   missing <- setdiff(ip$components[[name]]$isotopes %>% names(), names(ip$isotopes))
@@ -32,7 +32,7 @@ get_component_matrix <- function(ip, na = "unspecified") {
   if (!is(ip, "isopath")) stop ("can only get component matrix from an isopath")
   lapply(ip$components, function(i) {
     if ( length(i$isotopes) == 0 ) i$isotopes <- setNames(1, na)
-    c(list(component = i$name), as.list(i$isotopes)) %>% as_data_frame()
+    c(list(component = i$name, variable = i$variable), as.list(i$isotopes)) %>% as_data_frame()
   }) %>%
   bind_rows()
 }

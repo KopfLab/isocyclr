@@ -86,7 +86,7 @@ get_reaction_component_matrix <- function(ip) {
     gather(component, comp_stoic, -reaction, -rxn_nr) %>%
     left_join(
       ip %>% get_component_matrix() %>%
-        gather(isotope, iso_stoic, -component),
+        gather(isotope, iso_stoic, -component, -variable),
       by = "component"
     ) %>%
     filter(!is.na(iso_stoic), !is.na(comp_stoic))

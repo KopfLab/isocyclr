@@ -47,7 +47,7 @@ test_that("Isopath structure matrices work", {
     add_isotope("C") %>%
     add_isotope("N") %>%
     add_component("X", 2 * C, N) %>%
-    add_component("Y", C) %>%
+    add_component("Y", C, variable = FALSE) %>%
     add_component("Z") %>%
     add_component("W") %>%
     add_reaction("rxn1", X == 3 * Y) %>%
@@ -55,6 +55,7 @@ test_that("Isopath structure matrices work", {
 
   expect_equal(sys %>% get_component_matrix(),
     data_frame(component = c("X", "Y", "Z", "W"),
+               variable = c(T, F, T, T),
                C = c(2, 1, NA, NA),
                N = c(1, NA, NA, NA),
                unspecified = c(NA, NA, 1, 1))
@@ -73,6 +74,7 @@ test_that("Isopath structure matrices work", {
                  rxn_nr = rep(c(1, 2), each = 3),
                  component = c("X", "X", "Y", "Y", "Z", "W"),
                  comp_stoic = c(1, 1, -3, 1, 2, -1),
+                 variable = c(T, T, F, F, T, T),
                  isotope = c("C", "N", "C", "C", "unspecified", "unspecified"),
                  iso_stoic = c(2, 1, 1, 1, 1, 1)
                ))
@@ -93,7 +95,10 @@ test_that("Adding reaction flux and isotopes works", {
                   names(), c("X", "Y"))
   expect_equal( add_reaction(sys, "rxn1", X == Y, flux.X.C = pi(), flux.Y.C = 3)$reactions$rxn1$isotopes$C$X$expr %>%
                   deparse(), "pi()")
+  expect_equal( get_dynamic_variables(sys), c("X", "X.C", "Y", "Y.C") )
   expect_equal( get_parameters_template(sys), data_frame(X = 0, X.C = 0, Y = 0, Y.C = 0) )
+  expect_equal( sys %>% add_component("X", C, variable = F) %>% get_parameters_template(),
+                data_frame(Y = 0, Y.C = 0) )
   expect_error( set_parameters(sys, data_frame(a = 5)), "parameters required for minimal parameter set missing")
   expect_equal( set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))$parameters,
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
