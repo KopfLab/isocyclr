@@ -8,6 +8,7 @@ add_reaction <- function(ip, name, eq, flux, ..., nr = new_nr()) {
   add_reaction_(ip, name, deparse(substitute(eq)), nr, lazy(flux, env = parent.frame()), isotopes = lazy_dots(...))
 }
 
+#' add reaction with standard evaluation
 #'
 #' @param nr the reaction number (for sorting it in a diagram)
 #' @param flux lazy object for later evaluation
@@ -27,20 +28,35 @@ add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
       nr = nr,
       components = parse_reaction_equation(eq),
       flux = flux,
-      isotopes = isotopes
+      isotopes = list()
     )
 
+  # parse isotopes list for compound names (isotope.component)
+  isotope.components <- c()
+  for (iso in names(isotopes)) {
+    parts <- strsplit(iso, ".", fixed = T)[[1]]
+    if ( length(parts) == 1) {
+      ip$reactions[[name]]$isotopes[[parts[1]]] <- isotopes[[iso]]
+    } else if (length(parts) == 2) {
+      isotope.components <- c(isotope.components, parts[2])
+      ip$reactions[[name]]$isotopes[[parts[1]]][[parts[2]]] <- isotopes[[iso]]
+    } else stop("cannot process compound isotope.component name: ", iso, call. = FALSE)
+  }
+
   # check for missing components
-  missing_comp <- setdiff(ip$reactions[[name]]$components %>% names(), names(ip$components))
+  missing_comp <- c(
+    setdiff(ip$reactions[[name]]$components %>% names(), names(ip$components)),
+    setdiff(isotope.components, names(ip$components))
+  )
   if (length(missing_comp) > 0)
     stop("missing component definition(s), make sure to add this with add_component() first: ",
-         missing_comp %>% paste(collapse = ","), call. = FALSE)
+         missing_comp %>% paste(collapse = ", "), call. = FALSE)
 
   # check for missing isotopes
   missing_isos <- setdiff(ip$reactions[[name]]$isotopes %>% names(), names(ip$isotopes))
   if (length(missing_isos) > 0)
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
-         missing_isos %>% paste(collapse = ","), call. = FALSE)
+         missing_isos %>% paste(collapse = ", "), call. = FALSE)
 
   return(ip)
 }
