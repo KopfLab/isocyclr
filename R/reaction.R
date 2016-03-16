@@ -1,7 +1,7 @@
 #' Create a reaction for a pathway
 #' @param eq valid equation with format a * A + b * B + ... == x * X + y * Y + ...
 #' @param flux the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
-#' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system)
+#' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)
 #' @export
 add_reaction <- function(ip, name, eq, flux, ..., nr = new_nr()) {
   new_nr <- function() length(ip$reactions) + 1
@@ -31,6 +31,12 @@ add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
       isotopes = list()
     )
 
+  # check isotope names for the flux. prefix
+  missing_prefix <- names(isotopes)[!grepl("flux\\.", names(isotopes))]
+  if (length(missing_prefix) > 0)
+    stop("missing prefix for isotope flux, please prefix each flux isotopic composition with 'flux.[<component>.].<isotope> = ...': ", missing_prefix %>% paste(collapse = ", "), call. = FALSE)
+  names(isotopes) <- gsub("flux\\.", "", names(isotopes))
+
   # parse isotopes list for compound names (isotope.component)
   isotope.components <- c()
   for (iso in names(isotopes)) {
@@ -38,8 +44,8 @@ add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
     if ( length(parts) == 1) {
       ip$reactions[[name]]$isotopes[[parts[1]]] <- isotopes[[iso]]
     } else if (length(parts) == 2) {
-      isotope.components <- c(isotope.components, parts[2])
-      ip$reactions[[name]]$isotopes[[parts[1]]][[parts[2]]] <- isotopes[[iso]]
+      isotope.components <- c(isotope.components, parts[1])
+      ip$reactions[[name]]$isotopes[[parts[2]]][[parts[1]]] <- isotopes[[iso]]
     } else stop("cannot process compound isotope.component name: ", iso, call. = FALSE)
   }
 

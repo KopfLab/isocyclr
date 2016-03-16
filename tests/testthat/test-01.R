@@ -84,15 +84,17 @@ test_that("Adding reaction flux and isotopes works", {
     add_isotope("C") %>%
     add_component("X", C) %>%
     add_component("Y", C)
-  expect_error( add_reaction(sys, "rxn1", X == Y, N = 1), "missing isotope definition")
-  expect_error( add_reaction(sys, "rxn1", X == Y, C.abc = 1), "missing component definition")
-  expect_equal( add_reaction(sys, "rxn1", X == Y, C = 1)$reactions$rxn1$isotopes$C$expr, 1)
-  expect_equal( add_reaction(sys, "rxn1", X == Y, C = X + Y)$reactions$rxn1$isotopes$C$expr %>% deparse(), "X + Y")
-  expect_equal( add_reaction(sys, "rxn1", X == Y, C.X = 5, C.Y = 3)$reactions$rxn1$isotopes$C %>% names(), c("X", "Y"))
-  expect_equal( add_reaction(sys, "rxn1", X == Y, C.X = pi(), C.Y = 3)$reactions$rxn1$isotopes$C$X$expr %>%
+  expect_error( add_reaction(sys, "rxn1", X == Y, C = 1), "missing prefix for isotope flux")
+  expect_error( add_reaction(sys, "rxn1", X == Y, flux.N = 1), "missing isotope definition")
+  expect_error( add_reaction(sys, "rxn1", X == Y, flux.C.abc = 1), "missing component definition")
+  expect_equal( add_reaction(sys, "rxn1", X == Y, flux.C = 1)$reactions$rxn1$isotopes$C$expr, 1)
+  expect_equal( add_reaction(sys, "rxn1", X == Y, flux.C = X + Y)$reactions$rxn1$isotopes$C$expr %>% deparse(), "X + Y")
+  expect_equal( add_reaction(sys, "rxn1", X == Y, flux.X.C = 5, flux.Y.C = 3)$reactions$rxn1$isotopes$C %>%
+                  names(), c("X", "Y"))
+  expect_equal( add_reaction(sys, "rxn1", X == Y, flux.X.C = pi(), flux.Y.C = 3)$reactions$rxn1$isotopes$C$X$expr %>%
                   deparse(), "pi()")
-  expect_equal( get_parameters_template(sys), data_frame(X.m = 0, X.C.d = 0, Y.m = 0, Y.C.d = 0) )
+  expect_equal( get_parameters_template(sys), data_frame(X = 0, X.C = 0, Y = 0, Y.C = 0) )
   expect_error( set_parameters(sys, data_frame(a = 5)), "parameters required for minimal parameter set missing")
-  expect_equal( set_parameters(sys, data_frame(X.m = 1, X.C.d = 2, Y.m = 3, Y.C.d = 4))$parameters,
-                data_frame(X.m = 1, X.C.d = 2, Y.m = 3, Y.C.d = 4))
+  expect_equal( set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))$parameters,
+                data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
 })

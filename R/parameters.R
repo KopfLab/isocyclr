@@ -23,7 +23,7 @@ get_parameters_template <- function(ip) {
   df <- list()
   df[ip$components %>%
       sapply(function(i) {
-        c(i$name %>% paste0(".m"), paste0(i$name, ".", names(i$isotopes), ".d"))
+        c(i$name, paste0(i$name, ".", names(i$isotopes)))
       }) %>% unlist()] <- 0
   df %>% as_data_frame()
 }
