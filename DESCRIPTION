@@ -26,8 +26,11 @@ Collate:
     'component.R'
     'isotope.R'
     'notes.R'
+    'parameters.R'
+    'plotting.R'
     'validation.R'
     'reaction.R'
     'system.R'
     'package.R'
+    'steady_state.r'
 RoxygenNote: 5.0.0

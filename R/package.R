@@ -5,10 +5,8 @@
 #' @docType package
 #' @import dplyr lazyeval
 #' @importFrom tidyr gather gather_ extract extract_ spread spread_
-#' @include notes.R
-#' @include system.R
-#' @include reaction.R
-#' @include isotope.R
-#' @include component.R
-#' @include validation.R
 NULL
+
+# todo list:
+# - implement component straight from formula (inferring isotopes), e.g. NO3
+# - implement check on mass balance consistency in equations (so that the same number of N and O get's added/removed on both sides)
