@@ -4,7 +4,10 @@
 #'
 #' @export
 generate_reaction_diagram <- function(ip) {
-  if (!is(ip, "isopath")) stop ("can only generate diagram for isopath")
+  if (!is(ip, "isopath")) stop ("can only generate diagram for isopath", call. = FALSE)
+
+  if (length(ip$reactions) == 0 || length(ip$components) == 0)
+    stop("need at least two components and one reaction in order to plot the reaction diagram", call. = FALSE)
 
   # determin x locations for components
   general_x <-
