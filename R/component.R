@@ -1,27 +1,27 @@
 #' Create a reaction for a pathway
-#' @param fixed - whether this component has fixed concentration and isotopic composition, default is that it can vary
+#' @param constant - whether this component has constant concentration and isotopic composition, default is that it can vary
 #' @param ... the isotopes (refer to by name)
 #' @note non-standard evaluation
 #' @export
-add_component <- function(ip, name, ..., fixed = FALSE) {
-  add_component_(ip, name, fixed = fixed, .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
+add_component <- function(ip, name, ..., constant = FALSE) {
+  add_component_(ip, name, constant = constant, .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
 }
 
 #' add isotopes to a component
 #' @export
 #' @note standard evaluation
-add_component_ <- function(ip, name, ..., .dots = list(), fixed = FALSE) {
-  if (!is(ip, "isopath")) stop ("component can only be added to an isopath", stop. = FALSE)
-  if (!grepl("^\\w+$", name)) stop("only alphanumeric component names allowed: ", name, stop. = FALSE)
+add_component_ <- function(ip, name, ..., .dots = list(), constant = FALSE) {
+  if (!is(ip, "isopath")) stop ("component can only be added to an isopath", call. = FALSE)
+  if (!grepl("^\\w+$", name)) stop("only alphanumeric component names allowed: ", name, call. = FALSE)
   ip$components[[name]] <- list(
     name = name,
-    fixed = fixed,
+    constant = constant,
     isotopes = sapply(c(list(...), .dots), parse_reaction_component)
   )
   missing <- setdiff(ip$components[[name]]$isotopes %>% names(), names(ip$isotopes))
   if (length(missing) > 0)
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
-         missing %>% paste(collapse = ", "), stop. = FALSE)
+         missing %>% paste(collapse = ", "), call. = FALSE)
   return(ip)
 }
 
