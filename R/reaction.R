@@ -16,7 +16,6 @@ add_reaction <- function(ip, name, eq, flux, ..., nr = new_nr()) {
 #' @note standard evaluation
 add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
   if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
-  if (!grepl("^\\w+$", name)) stop("only alphanumeric reaction names allowed: ", name, call. = FALSE)
 
   new_nr <- function() {
     length(ip$reactions) + 1
