@@ -3,7 +3,7 @@
 #' @param flux the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
 #' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)
 #' @export
-add_reaction <- function(ip, name, eq, flux, ..., nr = new_nr()) {
+add_reaction <- function(ip, name, eq, flux = NULL, ..., nr = new_nr()) {
   new_nr <- function() length(ip$reactions) + 1
   add_reaction_(ip, name, deparse(substitute(eq)), nr, lazy(flux, env = parent.frame()), isotopes = lazy_dots(...))
 }
@@ -115,7 +115,7 @@ parse_reaction_equation <- function(eq) {
   right <- strsplit(sides[2], "+", fixed = T)[[1]]
   if (length(left) == 0 || length(right) == 0) stop(err)
   c(
-    lapply(left, parse_reaction_component) %>% unlist() * 1,
-    lapply(right, parse_reaction_component) %>% unlist() * -1
+    lapply(left, parse_reaction_component) %>% unlist() * -1,
+    lapply(right, parse_reaction_component) %>% unlist() * 1
   )
 }

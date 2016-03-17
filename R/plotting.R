@@ -12,7 +12,7 @@ generate_reaction_diagram <- function(ip) {
   # determin x locations for components
   general_x <-
     ip %>% get_reaction_component_matrix() %>%
-    mutate(x = rxn_nr - ifelse(comp_stoic > 0, 1, 0 ))
+    mutate(x = rxn_nr - ifelse(comp_stoic < 0, 1, 0 ))
 
   # determine y locations for components
   components_xy <-
