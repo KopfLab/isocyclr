@@ -6,8 +6,23 @@ isopath <- function() {
     isotopes = list(),
     components = list(),
     reactions = list(),
-    parameters = list()
+    parameters = data_frame()
   ), class = "isopath")
+}
+
+#' Get the dynamic variables in the system
+#' @export
+get_variables <- function(ip){
+  if (!is(ip, "isopath")) stop ("need an isopath to generate a list of dynamics variables")
+
+  ip$components %>%
+    lapply(function(i) {
+      if (i$variable) # only variable components are included
+        c(i$name, paste0(i$name, ".", names(i$isotopes)))
+      else
+        c()
+    }) %>%
+    unlist() %>% unname()
 }
 
 #' @export
