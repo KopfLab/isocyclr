@@ -4,7 +4,10 @@
 \alias{set_parameters}
 \title{add parameter data frame to the isopath}
 \usage{
-set_parameters(ip, params)
+set_parameters(ip, ...)
+}
+\arguments{
+\item{...}{parameters, either a whole set of parameters as a single data frame, or a list of individual values, will try to merge with existing parameters and if neceesary overwrite existing parameters with the same name}
 }
 \description{
 add parameter data frame to the isopath

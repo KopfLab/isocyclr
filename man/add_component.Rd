@@ -4,12 +4,12 @@
 \alias{add_component}
 \title{Create a reaction for a pathway}
 \usage{
-add_component(ip, name, ..., constant = FALSE)
+add_component(ip, name, ..., variable = TRUE)
 }
 \arguments{
 \item{...}{the isotopes (refer to by name)}
 
-\item{constant}{- whether this component has constant concentration and isotopic composition, default is that it can vary}
+\item{variable}{- whether this component has variable concentration and isotopic composition, default is that it can vary}
 }
 \description{
 Create a reaction for a pathway

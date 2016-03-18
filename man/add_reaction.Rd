@@ -4,14 +4,14 @@
 \alias{add_reaction}
 \title{Create a reaction for a pathway}
 \usage{
-add_reaction(ip, name, eq, flux, ..., nr = new_nr())
+add_reaction(ip, name, eq, flux = NULL, ..., nr = new_nr())
 }
 \arguments{
 \item{eq}{valid equation with format a * A + b * B + ... == x * X + y * Y + ...}
 
 \item{flux}{the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)}
 
-\item{...}{isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system)}
+\item{...}{isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)}
 }
 \description{
 Create a reaction for a pathway

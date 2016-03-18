@@ -4,7 +4,7 @@
 \alias{add_component_}
 \title{add isotopes to a component}
 \usage{
-add_component_(ip, name, ..., .dots = list(), constant = FALSE)
+add_component_(ip, name, ..., .dots = list(), variable = FALSE)
 }
 \description{
 add isotopes to a component
