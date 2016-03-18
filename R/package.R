@@ -3,10 +3,11 @@
 #' @description This package facilitates the modeling of isotopic effects through biogeochemical pathways and cycles including non-steady state and steady-state solutions.
 #' @author Sebastian Kopf
 #' @docType package
-#' @import dplyr lazyeval
+#' @import dplyr lazyeval deSolve ggplot2
 #' @importFrom tidyr gather gather_ extract extract_ spread spread_
 NULL
 
 # todo list:
 # - implement component straight from formula (inferring isotopes), e.g. NO3
 # - implement check on mass balance consistency in equations (so that the same number of N and O get's added/removed on both sides)
+# - finds ways to improve performance / make everything run faster if possible

@@ -16,7 +16,8 @@ Imports:
     dplyr,
     lazyeval,
     tidyr,
-    ggplot2
+    ggplot2,
+    deSolve
 Suggests:
     testthat,
     rmarkdown,
@@ -32,5 +33,6 @@ Collate:
     'reaction.R'
     'system.R'
     'package.R'
-    'steady_state.r'
+    'evaluation.R'
+    'steady_state.R'
 RoxygenNote: 5.0.0
