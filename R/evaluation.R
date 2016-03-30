@@ -19,9 +19,17 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters) {
     filter(variable == T) %>%
     select(reaction, component, comp_stoic) %>%
     distinct() %>%
+    # join in reaction
     left_join(
       ip %>% get_flux_matrix(eval = T, param = parameters),
       by = c("reaction")
+    ) %>%
+    # join in data (not actually needed for computation but good for safety checks)
+    left_join(
+      parameters %>% as_data_frame() %>%
+        select_(.dots = ip %>% get_variables()) %>%
+        gather(component, pool_size),
+      by = c("component")
     ) %>%
     # calculate actual stoichiometry weighted dx/dt
     mutate(`dx/dt` = comp_stoic * flux)
@@ -43,7 +51,7 @@ get_component_change_summary <- function(ip, parameters = ip$parameters) {
   if (!is(ip, "isopath")) stop ("can only get component change for an isopath", call. = F)
   ip %>%
     get_component_change_matrix(param = parameters) %>%
-    group_by(component) %>%
+    group_by(component, pool_size) %>%
     summarize(`dx/dt` = sum(`dx/dt`)) %>%
     ungroup()
 }
@@ -145,7 +153,7 @@ get_isotope_change_summary <- function(ip, parameters = ip$parameters) {
   if (!is(ip, "isopath")) stop ("can only get isotope change for an isopath", call. = F)
   ip %>%
     get_isotope_change_matrix(param = parameters) %>%
-    group_by(isotope, component) %>%
+    group_by(isotope, component, pool_isotope) %>%
     summarize(`dx/dt` = sum(`dx/dt`)) %>%
     ungroup()
 }

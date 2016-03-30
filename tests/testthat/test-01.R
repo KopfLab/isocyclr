@@ -116,12 +116,14 @@ test_that("Adding parameters works", {
 test_that("Evaluation works", {
   expect_error(get_flux_matrix(NULL), "can only get flux matrix from an isopath")
   expect_error(get_flux_isotope_matrix(NULL), "can only get flux isotope matrix from an isopath")
+  expect_error(get_component_change_summary(NULL), "can only get component change for an isopath")
+  expect_error(get_isotope_change_summary(NULL), "can only get isotope change for an isopath")
 
   sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
-    add_reaction("rxn1", X == Y, flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
-    set_parameters(X = 0, X.C = 0, X.N = 0, Y = 0, Y.C = 0, Y.N = 0)
+    add_reaction("rxn1", X == 2 * Y, flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
+    set_parameters(X = 1, X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
 
   # flux matrix
   expect_equal(sys  %>% get_flux_matrix(), data_frame(reaction = "rxn1", flux = "dm"))
@@ -130,13 +132,31 @@ test_that("Evaluation works", {
   expect_equal(sys %>% set_parameters(dm = 3) %>%
                  get_flux_matrix(eval = T), data_frame(reaction = "rxn1", flux = 3))
 
+  # flux component summary
+  expect_equal(sys %>% set_parameters(dm = 2) %>%
+                 get_component_change_summary(),
+               data_frame(component = c("X", "Y"), pool_size = c(1, 1), `dx/dt` = c(-2, 4)))
+
   # flux isotopes matrix
-  expected <- data_frame(reaction = "rxn1", isotope = c("N", "C", "C"),
-                         component = c("<all>", "X", "Y"), flux = c("dN", "X.dC", "Y.dC"))
+  expected <- data_frame(reaction = "rxn1", isotope = c("N", "N", "C", "C"),
+                         component = c("X", "Y", "X", "Y"),
+                         flux_isotope = c("dN", "dN", "X.dC", "Y.dC"))
   expect_equal(sys  %>% get_flux_isotope_matrix(), expected)
   expect_error(sys  %>% get_flux_isotope_matrix(eval = T))
-  expect_equal(sys  %>% get_flux_isotope_matrix(eval = T, param = data_frame(dN = 0.1, X.dC = 0.4, Y.dC = 0.6)),
-               expected %>% mutate(flux = c(0.1, 0.4, 0.6)))
-  expect_equal(sys %>% set_parameters(dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
-                 get_flux_isotope_matrix(eval = T), expected %>% mutate(flux = c(0.1, 0.4, 0.6)))
+  expect_equal(sys  %>%
+                 get_flux_isotope_matrix(eval = T,
+                                         param = data_frame(dN = 0.1, X.dC = 0.4, Y.dC = 0.6)),
+               expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
+  expect_equal(sys %>%
+                 set_parameters(dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
+                 get_flux_isotope_matrix(eval = T),
+               expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
+
+  expect_equal(sys  %>% set_parameters(dm = 2, dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
+                 get_isotope_change_summary(),
+               data_frame(isotope = c("N", "N", "C", "C"),
+                          component = c("X", "Y", "X", "Y"),
+                          pool_isotope = c(1, 1, 1, 1),
+                          `dx/dt` = c(1.8, -3.6, 1.2, -1.6)))
+
 })
