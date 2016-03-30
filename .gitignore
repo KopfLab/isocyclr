@@ -10,8 +10,10 @@
 # Local package copy for autotest
 .local/*
 
-# Tmp directory
+# Tmp directory and files
 tmp/*
+~$*
 
 # Ignore plots created by testing functionality
 tests/testthat/*.pdf
+
