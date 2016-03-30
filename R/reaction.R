@@ -10,22 +10,22 @@ add_reaction <- function(ip, name, eq, flux = NULL, ..., nr = new_nr()) {
 
 #' add reaction with standard evaluation
 #'
-#' @param nr the reaction number (for sorting it in a diagram)
+#' @param abscissa the reaction location (for sorting it in a diagram)
 #' @param flux lazy object for later evaluation
 #' @param isotopes named list with lazy objects for later evaluation
 #' @export
 #' @note standard evaluation
-add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
+add_reaction_ <- function(ip, name, eq, abscissa, flux, isotopes = list()) {
   if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
 
-  new_nr <- function() {
+  new_abscissa <- function() {
     length(ip$reactions) + 1
   }
 
   ip$reactions[[name]] <-
     list(
       name = name,
-      nr = nr,
+      abscissa = abscissa,
       components = parse_reaction_equation(eq),
       flux = flux,
       isotopes = list()
@@ -75,7 +75,7 @@ add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
 get_reaction_matrix <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
   lapply(ip$reactions, function(i) {
-    c(list(reaction = i$name, rxn_nr = i$nr), as.list(i$components)) %>% as_data_frame()
+    c(list(reaction = i$name, abscissa = i$abscissa), as.list(i$components)) %>% as_data_frame()
   }) %>%
     bind_rows()
 }
@@ -91,7 +91,7 @@ get_reaction_component_matrix <- function(ip) {
   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
 
   left_join(
-    rxn %>% gather(component, comp_stoic, -reaction, -rxn_nr),
+    rxn %>% gather(component, comp_stoic, -reaction, -abscissa),
     cps %>% gather(isotope, iso_stoic, -component, -variable),
     by = "component"
   ) %>%

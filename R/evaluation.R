@@ -111,7 +111,7 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters, check_miss
   # combine information
   flux_isotopes <-
     ip$info$variable_reaction_component_matrix %>%
-    select(-rxn_nr, -variable) %>%
+    select(-abscissa, -variable) %>%
     # join in the flux matrix to figure out flux values
     # NOTE: this + data join below is actually faster than joining in get_flux_change_summary! tested with microbenchmark
     left_join(

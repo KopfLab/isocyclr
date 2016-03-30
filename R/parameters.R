@@ -13,15 +13,10 @@ set_parameters <- function(ip, ...) {
     tryCatch(
       ip$parameters <- bind_cols(ip$parameters[!names(ip$parameters) %in% names(params)], params),
       error = function(e) {
-        stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'. If you want to overwrite all existing parameters, use the option replace = TRUE when calling set_parameters(...)")
+        stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'.")
       })
   } else
     ip$parameters <- params
-
-  missing <- setdiff(ip %>% get_variables(), names(ip$parameters))
-  if (length(missing) > 0)
-    stop("parameters required for minimal parameter set missing: ",
-         missing %>% paste(collapse = ", "), call. = FALSE)
 
   return(ip)
 }
