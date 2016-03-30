@@ -40,11 +40,18 @@ store_info <- function(ip) {
 #' @export
 print.isopath <- function(x, ...) {
   # implement this eventually
-  sprintf("Isopath [%d components, %d reactions]:\n", length(x$components), length(x$reactions)) %>% cat()
+  sprintf("Isopath [%d components, %d reactions, %d parameter sets]:\n",
+          length(x$components), length(x$reactions), nrow(x$parameters)) %>% cat()
   cat("\nCOMPONENTS - ")
   print(x %>% get_component_matrix())
   cat("\nREACTIONS - ")
   print(x %>% get_reaction_matrix())
+  cat("\nFLUXES - ")
+  print(x %>% get_flux_matrix(eval = F))
+  cat("\nFLUX ISOTOPES - ")
+  print(x %>% get_flux_isotope_matrix(eval = F))
+  cat("\nPARAMETERS - ")
+  print(x$parameters)
 }
 
 #' Merge multiple isopaths
