@@ -6,7 +6,8 @@ isopath <- function() {
     isotopes = list(),
     components = list(),
     reactions = list(),
-    parameters = data_frame()
+    parameters = data_frame(),
+    info = list()
   ), class = "isopath")
 }
 
@@ -23,6 +24,17 @@ get_variables <- function(ip){
         c()
     }) %>%
     unlist() %>% unname()
+}
+
+#' store the information about the system in the info list
+#' (this is done for performance reasons to reduce time
+#' intenstive calculations during ode integrations)
+store_info <- function(ip) {
+  stopifnot(is(ip, "isopath"))
+  ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()
+  ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == T)
+  ip$info$variables <- ip %>% get_variables()
+  return(ip)
 }
 
 #' @export

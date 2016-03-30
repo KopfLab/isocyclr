@@ -22,6 +22,10 @@ add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
   if (length(missing) > 0)
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
          missing %>% paste(collapse = ", "), call. = FALSE)
+
+  # store info
+  ip <- ip %>% store_info()
+
   return(ip)
 }
 

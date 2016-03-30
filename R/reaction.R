@@ -64,6 +64,9 @@ add_reaction_ <- function(ip, name, eq, nr, flux, isotopes = list()) {
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
          missing_isos %>% paste(collapse = ", "), call. = FALSE)
 
+  # store info
+  ip <- ip %>% store_info()
+
   return(ip)
 }
 
@@ -80,15 +83,18 @@ get_reaction_matrix <- function(ip) {
 #' get the combined reaction_component_matrix
 #' @export
 get_reaction_component_matrix <- function(ip) {
-  if (!is(ip, "isopath")) stop ("can only get reaction component matrix from an isopath")
-  ip %>%
-    get_reaction_matrix() %>%
-    gather(component, comp_stoic, -reaction, -rxn_nr) %>%
-    left_join(
-      ip %>% get_component_matrix() %>%
-        gather(isotope, iso_stoic, -component, -variable),
-      by = "component"
-    ) %>%
+  if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
+
+  cps <- ip %>% get_component_matrix()
+  rxn <- ip %>% get_reaction_matrix()
+
+  if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
+
+  left_join(
+    rxn %>% gather(component, comp_stoic, -reaction, -rxn_nr),
+    cps %>% gather(isotope, iso_stoic, -component, -variable),
+    by = "component"
+  ) %>%
     filter(!is.na(iso_stoic), !is.na(comp_stoic))
 }
 

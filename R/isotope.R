@@ -5,5 +5,8 @@ add_isotope <- function(ip, name) {
   if (!grepl("^\\w+$", name)) stop("only alphanumeric isotope names allowed: ", name)
   ip$isotopes[[name]] <- list()
 
+  # store info
+  ip <- ip %>% store_info()
+
   return(ip)
 }

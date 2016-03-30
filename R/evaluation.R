@@ -11,12 +11,12 @@ get_flux_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters){
 }
 
 #' get component changes (dx/dt) for each reaction and component with the parameters provided
+#' @param check_missing whether to check for any missing flux components
 #' @export
-get_component_change_matrix <- function(ip, parameters = ip$parameters) {
+get_component_change_matrix <- function(ip, parameters = ip$parameters, check_missing = TRUE) {
   if (!is(ip, "isopath")) stop ("can only get component change for an isopath", call. = F)
   component_flux <-
-    ip %>% get_reaction_component_matrix() %>%
-    filter(variable == T) %>%
+    ip$info$variable_reaction_component_matrix %>%
     select(reaction, component, comp_stoic) %>%
     distinct() %>%
     # join in reaction
@@ -26,8 +26,7 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters) {
     ) %>%
     # join in data (not actually needed for computation but good for safety checks)
     left_join(
-      parameters %>% as_data_frame() %>%
-        select_(.dots = ip %>% get_variables()) %>%
+      as_data_frame(parameters)[ip$info$variables] %>%
         gather(component, pool_size),
       by = c("component")
     ) %>%
@@ -35,10 +34,12 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters) {
     mutate(`dx/dt` = comp_stoic * flux)
 
   # safety checks
-  missing_flux <- component_flux %>% filter(is.na(`dx/dt`))
-  if (nrow(missing_flux) > 0) {
-    stop("missing mass flux for the following reaction-components: ",
-         paste(missing_flux$reaction, "-", missing_flux$component) %>% paste(collapse = ", "))
+  if (check_missing) {
+    missing_flux <- component_flux %>% filter(is.na(`dx/dt`))
+    if (nrow(missing_flux) > 0) {
+      stop("missing mass flux for the following reaction-components: ",
+           paste(missing_flux$reaction, "-", missing_flux$component) %>% paste(collapse = ", "))
+    }
   }
 
   return(component_flux)
@@ -47,10 +48,10 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters) {
 
 #' get the summary of component changes (dx/dt) for the parameters provided
 #' @export
-get_component_change_summary <- function(ip, parameters = ip$parameters) {
+get_component_change_summary <- function(ip, parameters = ip$parameters, ...) {
   if (!is(ip, "isopath")) stop ("can only get component change for an isopath", call. = F)
   ip %>%
-    get_component_change_matrix(param = parameters) %>%
+    get_component_change_matrix(param = parameters, ...) %>%
     group_by(component, pool_size) %>%
     summarize(`dx/dt` = sum(`dx/dt`)) %>%
     ungroup()
@@ -63,16 +64,17 @@ get_component_change_summary <- function(ip, parameters = ip$parameters) {
 get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters) {
   if (!is(ip, "isopath")) stop ("can only get flux isotope matrix from an isopath", call. = F)
   df <- list()
-  rxn_components <- ip %>% get_reaction_component_matrix()
+
   for (rxn in ip$reactions) {
     if (length(rxn$isotopes) > 0) {
+
       df[[rxn$name]] <-
         mapply(function(iso_name, iso) {
           retval <-
             if (iso %>% is("lazy")) { # flux isotopes for all components
               data_frame(
                 component =
-                  filter(rxn_components, reaction == rxn$name, isotope == iso_name)$component,
+                  filter(ip$info$reaction_component_matrix, reaction == rxn$name, isotope == iso_name)$component,
                 flux_isotope =
                   if(evaluate) lazy_eval(iso, parameters) else deparse(iso$expr))
             } else
@@ -83,13 +85,14 @@ get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parame
           return(mutate(retval, isotope = iso_name, reaction = rxn$name))
         },
         names(rxn$isotopes), rxn$isotopes, SIMPLIFY = F, USE.NAMES = F)
+
     }
   }
 
   # convert to data frame
   df <- df %>% unlist(recursive = F) %>% bind_rows()
 
-  # sort if any recovered
+  # arrange columns if any recovered
   if (nrow(df) > 0)
     df <- df %>% select(reaction, isotope, component, flux_isotope)
 
@@ -97,19 +100,20 @@ get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parame
 }
 
 #' get isotope change matrix by reaction and component + isotope
+#' @param check_missing whether to check for any missing flux components
 #' @export
-get_isotope_change_matrix <- function(ip, parameters = ip$parameters) {
+get_isotope_change_matrix <- function(ip, parameters = ip$parameters, check_missing = TRUE) {
   if (!is(ip, "isopath")) stop ("can only get isotope change for an isopath", call. = F)
 
   # get just data values from the parameters
-  data <- parameters %>% as_data_frame() %>% select_(.dots = ip %>% get_variables())
+  data <- as_data_frame(parameters)[ip$info$variables]
 
   # combine information
   flux_isotopes <-
-    ip %>% get_reaction_component_matrix() %>%
-    filter(variable == T) %>%
+    ip$info$variable_reaction_component_matrix %>%
     select(-rxn_nr, -variable) %>%
     # join in the flux matrix to figure out flux values
+    # NOTE: this + data join below is actually faster than joining in get_flux_change_summary! tested with microbenchmark
     left_join(
       ip %>% get_flux_matrix(eval = T, param = parameters),
       by = c("reaction")
@@ -137,11 +141,13 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters) {
     )
 
   # safety checks
-  missing_flux <- flux_isotopes %>% filter(is.na(`dx/dt`))
-  if (nrow(missing_flux) > 0) {
-    stop("missing isotope flux for the following reaction-component-isotopes: ",
-         paste(missing_flux$reaction, "-", missing_flux$component, "-",
-               missing_flux$isotope) %>% paste(collapse = ", "))
+  if (check_missing) {
+    missing_flux <- flux_isotopes %>% filter(is.na(`dx/dt`))
+    if (nrow(missing_flux) > 0) {
+      stop("missing isotope flux for the following reaction-component-isotopes: ",
+           paste(missing_flux$reaction, "-", missing_flux$component, "-",
+                 missing_flux$isotope) %>% paste(collapse = ", "))
+    }
   }
 
   return(flux_isotopes %>% select(-iso_stoic, -comp.isotope))
@@ -149,10 +155,10 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters) {
 
 #' get the isotope change summary
 #' @export
-get_isotope_change_summary <- function(ip, parameters = ip$parameters) {
+get_isotope_change_summary <- function(ip, parameters = ip$parameters, ...) {
   if (!is(ip, "isopath")) stop ("can only get isotope change for an isopath", call. = F)
   ip %>%
-    get_isotope_change_matrix(param = parameters) %>%
+    get_isotope_change_matrix(param = parameters, ...) %>%
     group_by(isotope, component, pool_isotope) %>%
     summarize(`dx/dt` = sum(`dx/dt`)) %>%
     ungroup()
