@@ -1,32 +1,71 @@
+#' calculate default abscissa
+#' depending on exising reactions, calculate
+#' where the new reaction should go
+default_abscissa <- function(ip, new_components) {
+
+  # if no other prior reactions yet
+  if (length(ip$reactions) == 0)
+    return(1)
+
+  # combine new components and existing reactions
+  rxns <-
+    left_join(
+      ip$info$reaction_component_matrix,
+      as.list(new_components) %>% as_data_frame() %>%
+        gather(new_component, new_comp_stoic),
+      by = c("component" = "new_component")
+    ) %>%
+    select(abscissa, comp_stoic, new_comp_stoic) %>%
+    distinct() %>%
+    filter(!is.na(new_comp_stoic)) %>%
+    filter(abscissa == min(abscissa)) %>%
+    filter(comp_stoic == max(comp_stoic))
+
+  # components not found
+  if (nrow(rxns) == 0)
+     return( max(ip$info$reaction_component_matrix$abscissa) + 1 )
+
+  # figure out where to position from existing components
+  new_ab <- with(rxns[1,], {
+    if (comp_stoic < 0 && new_comp_stoic < 0) return(abscissa) # consumed in both reactions
+    else if (comp_stoic < 0 && new_comp_stoic > 0) return(abscissa - 1) # produced in new reaction but consumed in prior
+    else if (comp_stoic > 0 && new_comp_stoic < 0) return(abscissa + 1) # produced in old but consumed in new reaction
+    else if (comp_stoic > 0 && new_comp_stoic > 0) return (abscissa) # produced in both reactions
+    else stop ("should never happen")
+  })
+  return(new_ab)
+}
+
 #' Create a reaction for a pathway
 #' @param eq valid equation with format a * A + b * B + ... == x * X + y * Y + ...
 #' @param flux the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
 #' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)
+#' @param abscissa the reaction loaction (purely for sorting in a digram), a value will be inferred from the system if NULL
 #' @export
-add_reaction <- function(ip, name, eq, flux = NULL, ..., nr = new_nr()) {
-  new_nr <- function() length(ip$reactions) + 1
-  add_reaction_(ip, name, deparse(substitute(eq)), nr, lazy(flux, env = parent.frame()), isotopes = lazy_dots(...))
+add_reaction <- function(ip, name, eq, flux = NULL, ..., abscissa = NULL) {
+  add_reaction_(ip, name, deparse(substitute(eq)),lazy(flux, env = parent.frame()), isotopes = lazy_dots(...), abscissa = abscissa)
 }
 
 #' add reaction with standard evaluation
 #'
-#' @param abscissa the reaction location (for sorting it in a diagram)
+#' @param abscissa the reaction loaction (purely for sorting in a digram), a value will be inferred from the system if NULL
 #' @param flux lazy object for later evaluation
 #' @param isotopes named list with lazy objects for later evaluation
 #' @export
 #' @note standard evaluation
-add_reaction_ <- function(ip, name, eq, abscissa, flux, isotopes = list()) {
+add_reaction_ <- function(ip, name, eq, flux, isotopes = list(), abscissa = NULL) {
   if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
 
-  new_abscissa <- function() {
-    length(ip$reactions) + 1
+  components <- parse_reaction_equation(eq)
+  if (is.null(abscissa)) {
+    abscissa <- default_abscissa(ip, components)
   }
 
   ip$reactions[[name]] <-
     list(
       name = name,
       abscissa = abscissa,
-      components = parse_reaction_equation(eq),
+      components = components,
       flux = flux,
       isotopes = list()
     )
@@ -74,6 +113,7 @@ add_reaction_ <- function(ip, name, eq, abscissa, flux, isotopes = list()) {
 #' @export
 get_reaction_matrix <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
+
   lapply(ip$reactions, function(i) {
     c(list(reaction = i$name, abscissa = i$abscissa), as.list(i$components)) %>% as_data_frame()
   }) %>%

@@ -39,6 +39,16 @@ test_that("Adding reaction equations works", {
                 c(A = -1, B = -5, C = 1, D = 2))
 })
 
+test_that("System info cache works", {
+  sys <- isopath() %>%
+    add_isotope("N") %>%
+    add_component("A", N) %>%
+    add_component("B", N, variable = FALSE)
+  expect_equal(sys$info$reaction_component_matrix, sys %>% get_reaction_component_matrix())
+  expect_equal(sys$info$variable_reaction_component_matrix, sys %>% get_reaction_component_matrix() %>% filter(variable == T))
+  expect_equal(sys$info$variables, sys %>% get_variables())
+})
+
 test_that("Isopath structure matrices work", {
   expect_error(get_reaction_matrix("not correct"), "can only get .* from an isopath")
   expect_error(get_component_matrix("not correct"), "can only get .* from an isopath")
@@ -63,7 +73,7 @@ test_that("Isopath structure matrices work", {
 
   expect_equal(sys %>% get_reaction_matrix(),
                data_frame(reaction = c("rxn1", "rxn2"),
-                          rxn_nr = c(1,2),
+                          abscissa = c(1,2),
                           X = c(-1, NA), Y = c(3, -1),
                           Z = c(NA, -2), W = c(NA, 1))
   )
@@ -71,7 +81,7 @@ test_that("Isopath structure matrices work", {
   expect_equal(sys %>% get_reaction_component_matrix(),
                data_frame(
                  reaction = rep(c("rxn1", "rxn2"), each = 3),
-                 rxn_nr = rep(c(1, 2), each = 3),
+                 abscissa = rep(c(1, 2), each = 3),
                  component = c("X", "X", "Y", "Y", "Z", "W"),
                  comp_stoic = c(-1, -1, 3, -1, -2, 1),
                  variable = c(T, T, F, F, T, T),
@@ -104,7 +114,6 @@ test_that("Adding parameters works", {
     add_component("Y", C)
   expect_equal( get_variables(sys), c("X", "X.C", "Y", "Y.C") )
   expect_equal( sys %>% add_component("X", C, variable = F) %>% get_variables(), c("Y", "Y.C") )
-  expect_error( set_parameters(sys, data_frame(a = 5)), "parameters required for minimal parameter set missing")
   expect_equal( {sys2 <- set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4)); sys2$parameters},
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys, X = 1, X.C = 2, Y = 3, Y.C = 4)$parameters,
@@ -158,5 +167,9 @@ test_that("Evaluation works", {
                           component = c("X", "Y", "X", "Y"),
                           pool_isotope = c(1, 1, 1, 1),
                           `dx/dt` = c(1.8, -3.6, 1.2, -1.6)))
+
+})
+
+test_that("Running works", {
 
 })
