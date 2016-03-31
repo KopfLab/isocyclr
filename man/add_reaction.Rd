@@ -2,18 +2,27 @@
 % Please edit documentation in R/reaction.R
 \name{add_reaction}
 \alias{add_reaction}
-\title{Create a reaction for a pathway}
+\alias{add_reaction_}
+\title{add reaction with standard evaluation}
 \usage{
-add_reaction(ip, name, eq, flux = NULL, ..., nr = new_nr())
+add_reaction_(ip, name, eq, flux, isotopes = list(), abscissa = NULL,
+  class = "generic", args = list())
 }
 \arguments{
-\item{eq}{valid equation with format a * A + b * B + ... == x * X + y * Y + ...}
+\item{flux}{lazy object for later evaluation}
 
-\item{flux}{the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)}
+\item{isotopes}{named list with lazy objects for later evaluation to calculate the isotope composition of the flux through this reaction}
 
-\item{...}{isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)}
+\item{abscissa}{the reaction loaction (purely for sorting in a digram), a value will be inferred from the system if NULL}
+
+\item{class}{the class of the reaction for internal processing purposes (e.g. steady state calculations)}
+
+\item{args}{additional arguments (usually expressions)}
 }
 \description{
-Create a reaction for a pathway
+add reaction with standard evaluation
+}
+\note{
+standard evaluation
 }
 
