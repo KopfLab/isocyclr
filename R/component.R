@@ -1,10 +1,15 @@
 #' Create a reaction for a pathway
+#' @param name of the component (use a vector to add multiple components with the same isotopes and \code{variable} attribute)
 #' @param variable - whether this component has variable concentration and isotopic composition, default is that it can vary
 #' @param ... the isotopes (refer to by name)
 #' @note non-standard evaluation
 #' @export
 add_component <- function(ip, name, ..., variable = TRUE) {
-  add_component_(ip, name, variable = variable, .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
+  for (component in name) {
+    ip <- add_component_(ip, component, variable = variable,
+                   .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
+  }
+  return(ip)
 }
 
 #' add isotopes to a component
