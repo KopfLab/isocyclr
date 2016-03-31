@@ -7,6 +7,8 @@
 add_component(ip, name, ..., variable = TRUE)
 }
 \arguments{
+\item{name}{of the component (use a vector to add multiple components with the same isotopes and \code{variable} attribute)}
+
 \item{...}{the isotopes (refer to by name)}
 
 \item{variable}{- whether this component has variable concentration and isotopic composition, default is that it can vary}

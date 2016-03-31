@@ -4,7 +4,7 @@
 \alias{get_isotope_change_summary}
 \title{get the isotope change summary}
 \usage{
-get_isotope_change_summary(ip, parameters = ip$parameters)
+get_isotope_change_summary(ip, parameters = ip$parameters[1, ], ...)
 }
 \description{
 get the isotope change summary

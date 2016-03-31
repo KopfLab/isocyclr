@@ -4,7 +4,11 @@
 \alias{get_isotope_change_matrix}
 \title{get isotope change matrix by reaction and component + isotope}
 \usage{
-get_isotope_change_matrix(ip, parameters = ip$parameters)
+get_isotope_change_matrix(ip, parameters = ip$parameters[1, ],
+  check_missing = TRUE)
+}
+\arguments{
+\item{check_missing}{whether to check for any missing flux components}
 }
 \description{
 get isotope change matrix by reaction and component + isotope

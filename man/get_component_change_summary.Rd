@@ -4,7 +4,7 @@
 \alias{get_component_change_summary}
 \title{get the summary of component changes (dx/dt) for the parameters provided}
 \usage{
-get_component_change_summary(ip, parameters = ip$parameters)
+get_component_change_summary(ip, parameters = ip$parameters[1, ], ...)
 }
 \description{
 get the summary of component changes (dx/dt) for the parameters provided

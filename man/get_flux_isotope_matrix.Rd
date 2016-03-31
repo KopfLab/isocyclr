@@ -4,7 +4,8 @@
 \alias{get_flux_isotope_matrix}
 \title{retrieve flux isotopes matrix}
 \usage{
-get_flux_isotope_matrix(ip, evaluate = FALSE, parameters = ip$parameters)
+get_flux_isotope_matrix(ip, evaluate = FALSE, parameters = ip$parameters[1,
+  ])
 }
 \arguments{
 \item{evaluate}{if TRUE, tries to evaluate the expressions stored for the different fluxes}

@@ -4,7 +4,11 @@
 \alias{get_component_change_matrix}
 \title{get component changes (dx/dt) for each reaction and component with the parameters provided}
 \usage{
-get_component_change_matrix(ip, parameters = ip$parameters)
+get_component_change_matrix(ip, parameters = ip$parameters[1, ],
+  check_missing = TRUE)
+}
+\arguments{
+\item{check_missing}{whether to check for any missing flux components}
 }
 \description{
 get component changes (dx/dt) for each reaction and component with the parameters provided

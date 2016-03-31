@@ -6,6 +6,9 @@
 \usage{
 add_isotope(ip, name)
 }
+\arguments{
+\item{name}{the name of the isotope to add (alpha numeric names only), can be a vector to add multiple isotopes at once}
+}
 \description{
 Add an isotope
 }
