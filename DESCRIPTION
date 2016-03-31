@@ -34,5 +34,6 @@ Collate:
     'system.R'
     'package.R'
     'evaluation.R'
+    'model.R'
     'steady_state.R'
 RoxygenNote: 5.0.0

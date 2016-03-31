@@ -37,8 +37,8 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters[1,], chec
   if (check_missing) {
     missing_flux <- component_flux %>% filter(is.na(`dx/dt`))
     if (nrow(missing_flux) > 0) {
-      stop("missing mass flux for the following reaction-components: ",
-           paste(missing_flux$reaction, "-", missing_flux$component) %>% paste(collapse = ", "))
+      stop("missing mass flux for the following reaction components: ",
+           paste(missing_flux$reaction, " ", missing_flux$component) %>% paste(collapse = ", "), call. = F)
     }
   }
 
@@ -144,9 +144,9 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters[1,], check_
   if (check_missing) {
     missing_flux <- flux_isotopes %>% filter(is.na(`dx/dt`))
     if (nrow(missing_flux) > 0) {
-      stop("missing isotope flux for the following reaction-component-isotopes: ",
-           paste(missing_flux$reaction, "-", missing_flux$component, "-",
-                 missing_flux$isotope) %>% paste(collapse = ", "))
+      stop("missing isotope flux for the following reaction + component + isotopes: ",
+           paste(missing_flux$reaction, "+", missing_flux$component, "+",
+                 missing_flux$isotope) %>% paste(collapse = ", "), call. = F)
     }
   }
 
