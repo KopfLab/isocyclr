@@ -63,7 +63,8 @@ generate_reaction_diagram <- function(ip) {
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       axis.text = element_blank(),
-      axis.ticks = element_blank()
+      axis.ticks = element_blank(),
+      legend.box = "horizontal"
     ) +
     scale_x_continuous("", expand = c(0, 0.5)) +
     scale_y_continuous("", expand = c(0, 0.5))
