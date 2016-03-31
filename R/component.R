@@ -9,7 +9,7 @@ add_component <- function(ip, name, ..., variable = TRUE) {
     ip <- add_component_(ip, component, variable = variable,
                    .dots = lazy_dots(...) %>% lapply(function(i) deparse(i$expr)))
   }
-  return(ip)
+  return(invisible(ip))
 }
 
 #' add isotopes to a component
@@ -31,7 +31,7 @@ add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
   # store info
   ip <- ip %>% store_info()
 
-  return(ip)
+  return(invisible(ip))
 }
 
 #' get the component matrix for an isopath

@@ -34,7 +34,7 @@ store_info <- function(ip) {
   ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()
   ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == T)
   ip$info$variables <- ip %>% get_variables()
-  return(ip)
+  return(invisible(ip))
 }
 
 #' @export

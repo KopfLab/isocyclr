@@ -26,7 +26,7 @@ set_parameters <- function(ip, ...) {
   } else
     ip$parameters <- params
 
-  return(ip)
+  return(invisible(ip))
 }
 
 #' get the parameter data frame

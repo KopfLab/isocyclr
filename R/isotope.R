@@ -12,5 +12,5 @@ add_isotope <- function(ip, name) {
   # store info
   ip <- ip %>% store_info()
 
-  return(ip)
+  return(invisible(ip))
 }
