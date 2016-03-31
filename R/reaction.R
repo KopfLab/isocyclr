@@ -37,13 +37,20 @@ default_abscissa <- function(ip, new_components) {
 }
 
 #' Create a reaction for a pathway
+#' @param name name of the reaction, if omitted, just numbers the reactions that are added to the isopath
 #' @param eq valid equation with format a * A + b * B + ... == x * X + y * Y + ...
 #' @param flux the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
 #' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)
 #' @param abscissa the reaction loaction (purely for sorting in a digram), a value will be inferred from the system if NULL
 #' @export
-add_reaction <- function(ip, name, eq, flux = NULL, ..., abscissa = NULL) {
-  add_reaction_(ip, name, deparse(substitute(eq)),lazy(flux, env = parent.frame()), isotopes = lazy_dots(...), abscissa = abscissa)
+add_reaction <- function(ip, name = NULL, eq, flux = NULL, ..., abscissa = NULL) {
+  if (missing(eq)) {
+    eq <- deparse(substitute(name))
+    name <- NULL
+  } else {
+    eq <- deparse(substitute(eq))
+  }
+  add_reaction_(ip, name, eq, lazy(flux, env = parent.frame()), isotopes = lazy_dots(...), abscissa = abscissa)
 }
 
 #' add reaction with standard evaluation
@@ -56,10 +63,14 @@ add_reaction <- function(ip, name, eq, flux = NULL, ..., abscissa = NULL) {
 add_reaction_ <- function(ip, name, eq, flux, isotopes = list(), abscissa = NULL) {
   if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
 
+  # default name
+  if (missing(name) || is.null(name))
+    name <- paste0("rxn", length(ip$reactions) + 1)
+
+  # default abscissa
   components <- parse_reaction_equation(eq)
-  if (is.null(abscissa)) {
+  if (is.null(abscissa))
     abscissa <- default_abscissa(ip, components)
-  }
 
   ip$reactions[[name]] <-
     list(

@@ -12,7 +12,7 @@ test_that("Adding isotope works", {
 })
 
 test_that("Adding components works", {
-  expect_error(add_component("not correct"), "can only be added to an isopath")
+  expect_error(add_component("not correct", "A"), "can only be added to an isopath")
   sys <- isopath() %>% add_isotope("N")
   expect_error( add_component(sys, "!@#$"), "only alphanumeric")
   expect_equal( add_component(sys, "A")$components %>% names, "A")
@@ -32,7 +32,8 @@ test_that("Adding reaction equations works", {
     add_component("A", N) %>%
     add_component("B", N)
   expect_error( add_reaction(sys, "rxn1", A), "please write equation in format")
-  expect_equal( add_reaction(sys, "rxn1", A == B)$reactions %>% names, "rxn1")
+  expect_equal( add_reaction(sys, "rxn1", A == B)$reactions %>% names(), "rxn1")
+  expect_equal( add_reaction(sys, A == B)$reactions %>% names(), "rxn1")
   expect_error( add_reaction(sys, "rxn1", A == C), "missing component definition")
   sys <- sys %>% add_component("C") %>% add_component("D")
   expect_equal( add_reaction(sys, "rxn1", A + 5*B == C + 2*D)$reactions$rxn1$components,
