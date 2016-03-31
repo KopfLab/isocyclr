@@ -9,6 +9,7 @@ test_that("Adding isotope works", {
   sys <- isopath()
   expect_error( add_isotope(sys, "!@#$"), "only alphanumeric")
   expect_equal( add_isotope(sys, "C")$isotopes %>% names(), "C")
+  expect_equal( add_isotope(sys, c("C", "N"))$isotopes %>% names(), c("C", "N"))
 })
 
 test_that("Adding components works", {
