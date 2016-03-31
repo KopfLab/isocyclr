@@ -2,7 +2,7 @@
 #' @param evaluate if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)
 #' @param parameters data to use for evaluating expressions
 #' @export
-get_flux_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters){
+get_flux_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]){
   if (!is(ip, "isopath")) stop ("can only get flux matrix from an isopath", call. = F)
   lapply(ip$reactions, function(i) {
     if (evaluate) lazy_eval(i$flux, parameters)
@@ -13,7 +13,7 @@ get_flux_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters){
 #' get component changes (dx/dt) for each reaction and component with the parameters provided
 #' @param check_missing whether to check for any missing flux components
 #' @export
-get_component_change_matrix <- function(ip, parameters = ip$parameters, check_missing = TRUE) {
+get_component_change_matrix <- function(ip, parameters = ip$parameters[1,], check_missing = TRUE) {
   if (!is(ip, "isopath")) stop ("can only get component change for an isopath", call. = F)
   component_flux <-
     ip$info$variable_reaction_component_matrix %>%
@@ -48,7 +48,7 @@ get_component_change_matrix <- function(ip, parameters = ip$parameters, check_mi
 
 #' get the summary of component changes (dx/dt) for the parameters provided
 #' @export
-get_component_change_summary <- function(ip, parameters = ip$parameters, ...) {
+get_component_change_summary <- function(ip, parameters = ip$parameters[1,], ...) {
   if (!is(ip, "isopath")) stop ("can only get component change for an isopath", call. = F)
   ip %>%
     get_component_change_matrix(param = parameters, ...) %>%
@@ -61,7 +61,7 @@ get_component_change_summary <- function(ip, parameters = ip$parameters, ...) {
 #' @param evaluate if TRUE, tries to evaluate the expressions stored for the different fluxes
 #' @param parameters only needed if \code{evaluate=TRUE}, data frame with all the parameters needed to evaluate the flux isotope expressions
 #' @export
-get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters) {
+get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
   if (!is(ip, "isopath")) stop ("can only get flux isotope matrix from an isopath", call. = F)
   df <- list()
 
@@ -102,7 +102,7 @@ get_flux_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parame
 #' get isotope change matrix by reaction and component + isotope
 #' @param check_missing whether to check for any missing flux components
 #' @export
-get_isotope_change_matrix <- function(ip, parameters = ip$parameters, check_missing = TRUE) {
+get_isotope_change_matrix <- function(ip, parameters = ip$parameters[1,], check_missing = TRUE) {
   if (!is(ip, "isopath")) stop ("can only get isotope change for an isopath", call. = F)
 
   # get just data values from the parameters
@@ -155,7 +155,7 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters, check_miss
 
 #' get the isotope change summary
 #' @export
-get_isotope_change_summary <- function(ip, parameters = ip$parameters, ...) {
+get_isotope_change_summary <- function(ip, parameters = ip$parameters[1,], ...) {
   if (!is(ip, "isopath")) stop ("can only get isotope change for an isopath", call. = F)
   ip %>%
     get_isotope_change_matrix(param = parameters, ...) %>%

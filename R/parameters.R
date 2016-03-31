@@ -9,9 +9,17 @@ set_parameters <- function(ip, ...) {
   else params <- args %>% as_data_frame()
 
   if (nrow(ip$parameters) > 0) {
-    # attempt to merge
-    tryCatch(
-      ip$parameters <- bind_cols(ip$parameters[!names(ip$parameters) %in% names(params)], params),
+    # attempt to merge (@TODO: could do this with mutate to allow single value additions)
+    tryCatch({
+      # if one of the sets is single line, allow it to be merged with a multi-line parameter set
+      if (nrow(params) == 1 && nrow(ip$parameters) > 1) {
+        params <- params[rep(1, nrow(ip$parameters)),]
+      } else if (nrow(params) > 1 && nrow(ip$parameters) == 1) {
+        ip$parameters <- ip$parameters[rep(1, nrow(params)),]
+      }
+      ip$parameters <- bind_cols(ip$parameters[!names(ip$parameters) %in%
+                                                 names(params)], params)
+      },
       error = function(e) {
         stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'.")
       })

@@ -122,6 +122,17 @@ test_that("Adding parameters works", {
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys2, X = 100, new = 0.1)$parameters,
                 data_frame(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
+  # multi line
+  sys3 <- set_parameters(sys2, X = 100, new = 0.1)
+  expect_equal(
+    set_parameters(sys3, Z = c(1,2))$parameters,
+    data_frame(X = c(100, 100), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4),
+               new = c(0.1, 0.1), Z = c(1, 2)))
+  expect_equal(
+    (sys3 %>% set_parameters(Z = c(1,2)) %>% set_parameters(X = 5))$parameters,
+    data_frame(X = c(5, 5), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4),
+               new = c(0.1, 0.1), Z = c(1, 2)))
+
 })
 
 test_that("Evaluation works", {
@@ -172,6 +183,6 @@ test_that("Evaluation works", {
 
 })
 
-test_that("Running works", {
+test_that("Running model works", {
 
 })
