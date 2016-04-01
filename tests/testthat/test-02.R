@@ -11,6 +11,15 @@ test_that("Calculations work", {
   expect_equal(fractionate(d = 0.01, a = 0.99, p = F), fractionate(d = 0.01, eps = -0.01, p = F))
   expect_equal(fractionate(d = 0.01, a = 0.99, p = F), (0.01+1)/0.99 - 1)
   expect_equal(fractionate(d = 5, eps = 10, p = T, mult = T), ((5/1000+1) * (10/1000+1) - 1) * 1000)
+
+  # test flux function
+  expect_error(flux(dir = "test"), "direction not recognized")
+  expect_error(flux(5, rev = 2, dir = "+"), "negative directional flux does not make sense")
+  expect_equal(flux(5, rev = 1, dir = "+", model_offset = 1e-12) - flux(5, rev = 1, dir = "-", model_offset = 1e-12), 5)
+  expect_equal(flux(10, rev = 0, dir = "+"), 10)
+  expect_equal(flux(10, rev = 0, dir = "-"), 0)
+  expect_equal(flux(10, rev = 0.5, dir = "+"), 20)
+  expect_equal(flux(10, rev = 0.5, dir = "-"), 10)
 })
 
 

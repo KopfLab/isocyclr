@@ -1,3 +1,43 @@
+#' Calculate forward/reverse flux
+#'
+#' Convenience function to calculate forward and reverse flux from net flux and
+#' reversibility.
+#'
+#' @param net the net flux
+#' @param reversibility the reversibility of the reaction
+#' @param direction whether to go forward ("+") or reverse ("-")
+#' @param model_offset completely reversible reactions (\code{reversibility = 1})
+#' do not have any net flux so if net is != 0 this is a problem that can be solved
+#' at steady-state but not during a model. The \code{model_offset} parameter offsets
+#' completely reversible reactions from 1 by this small number to make the reaction
+#' computationally feasible.
+#' @note This function uses standard evaluation.
+flux <- function(net, reversibility, direction, model_offset = 1e-9){
+
+  # calculate flux
+  if (direction == "+")
+    dir_flux <- net / (1 - reversibility)
+  else if (direction == "-")
+    dir_flux <- net / (1 - reversibility) * reversibility
+  else
+    stop("direction not recognized: ", direction, call. = F)
+
+  # check for problems (this takes some processing - any way to get around even more?)
+  if (any(is.infinite(dir_flux))) {
+    # this is from reversibility == 1 cases, add the model_offset
+    reversibility[reversibility == 1 & net > 0] <- reversibility[reversibility == 1 & net > 0] - model_offset
+    reversibility[reversibility == 1 & net < 0] <- reversibility[reversibility == 1 & net < 0] + model_offset
+    if (direction == "+") dir_flux <- net / (1 - reversibility)
+    else if (direction == "-") dir_flux <- net / (1 - reversibility) * reversibility
+  }
+
+  if (any(dir_flux < 0)) {
+    stop("negative directional flux does not make sense")
+  }
+
+  return(dir_flux)
+}
+
 #' Fractionate a delta value
 #'
 #' Convenience function to fractionate a delta value using a fractionation factor
