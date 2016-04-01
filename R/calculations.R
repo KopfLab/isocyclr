@@ -15,11 +15,13 @@
 flux <- function(net, reversibility, direction, model_offset = 1e-9){
 
   # calculate flux
-  if (direction == "+")
+  if (direction == "+") {
     dir_flux <- net / (1 - reversibility)
-  else if (direction == "-")
+    dir_sign <- 1
+  } else if (direction == "-") {
     dir_flux <- net / (1 - reversibility) * reversibility
-  else
+    dir_sign <- -1
+  } else
     stop("direction not recognized: ", direction, call. = F)
 
   # check for problems (this takes some processing - any way to get around even more?)
@@ -35,7 +37,7 @@ flux <- function(net, reversibility, direction, model_offset = 1e-9){
     stop("negative directional flux does not make sense")
   }
 
-  return(dir_flux)
+  return(dir_sign * dir_flux)
 }
 
 #' Fractionate a delta value
@@ -44,19 +46,19 @@ flux <- function(net, reversibility, direction, model_offset = 1e-9){
 #' in alpha or epsilon notation. This function does not approximate calculate accurate
 #' fractionation.
 #'
-#' @param delta the delta value (has to be in permil if \code{permil = TRUE})
-#' @param alpha the raw fractionation factor
-#' @param epsilon the fractionation factor in epsilon notation (alpha - 1)
-#' (has to be in permil if \code{permil = TRUE})
-#' @param permil whether the delta and epsilon values are in permil notation
-#' (i.e. all multiplied by 1000) or not (default is TRUE)
-#' @param multiply whether to multiply the resulting ratio by the fractionation factor or divide it.
+#' @param delta The delta value (has to be in permil if \code{permil = TRUE})
+#' @param alpha The fractionation factor in alpha notation.
+#' @param epsilon The fractionation factor in epsilon notation (alpha - 1)
+#' (has to be in permil if \code{permil = TRUE}).
+#' @param permil Whether the delta and epsilon values are in permil notation
+#' (i.e. all multiplied by 1000) or not.
+#' @param multiply Whether to multiply the delta-derived ratio by the fractionation factor or divide it.
 #' Divide is \code{multiply=FALSE} (the default), which is the correct behavior for kinetic fractionation
 #' factors defined as k_light/k_heavy and equilibrium fractionation factors defined as reactant/product.
-#' Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionatoin
-#' factors defined as k_heave/k_light and equilibrium fractionation factors defined as product/reactant.
+#' Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionation
+#' factors defined as k_heavy/k_light and equilibrium fractionation factors defined as product/reactant.
 #' @note This function uses standard evaluation.
-#' @return the resulting delta value (in permil notation if \code{permil = TRUE})
+#' @return The resulting delta value (in permil notation if \code{permil = TRUE})
 fractionate <- function(delta, alpha = NULL, epsilon = NULL, permil = TRUE, multiply = FALSE) {
 
   multiplier <- if (permil) 1000 else 1

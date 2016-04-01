@@ -15,11 +15,11 @@ test_that("Calculations work", {
   # test flux function
   expect_error(flux(dir = "test"), "direction not recognized")
   expect_error(flux(5, rev = 2, dir = "+"), "negative directional flux does not make sense")
-  expect_equal(flux(5, rev = 1, dir = "+", model_offset = 1e-12) - flux(5, rev = 1, dir = "-", model_offset = 1e-12), 5)
+  expect_equal(flux(5, rev = 1, dir = "+", model_offset = 1e-12) + flux(5, rev = 1, dir = "-", model_offset = 1e-12), 5)
   expect_equal(flux(10, rev = 0, dir = "+"), 10)
   expect_equal(flux(10, rev = 0, dir = "-"), 0)
   expect_equal(flux(10, rev = 0.5, dir = "+"), 20)
-  expect_equal(flux(10, rev = 0.5, dir = "-"), 10)
+  expect_equal(flux(10, rev = 0.5, dir = "-"), -10)
 })
 
 

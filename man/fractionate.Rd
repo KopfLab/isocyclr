@@ -8,24 +8,24 @@ fractionate(delta, alpha = NULL, epsilon = NULL, permil = TRUE,
   multiply = FALSE)
 }
 \arguments{
-\item{delta}{the delta value (has to be in permil if \code{permil = TRUE})}
+\item{delta}{The delta value (has to be in permil if \code{permil = TRUE})}
 
-\item{alpha}{the raw fractionation factor}
+\item{alpha}{The fractionation factor in alpha notation.}
 
-\item{epsilon}{the fractionation factor in epsilon notation (alpha - 1)
-(has to be in permil if \code{permil = TRUE})}
+\item{epsilon}{The fractionation factor in epsilon notation (alpha - 1)
+(has to be in permil if \code{permil = TRUE}).}
 
-\item{permil}{whether the delta and epsilon values are in permil notation
-(i.e. all multiplied by 1000) or not (default is TRUE)}
+\item{permil}{Whether the delta and epsilon values are in permil notation
+(i.e. all multiplied by 1000) or not.}
 
-\item{multiply}{whether to multiply the resulting ratio by the fractionation factor or divide it.
+\item{multiply}{Whether to multiply the delta-derived ratio by the fractionation factor or divide it.
 Divide is \code{multiply=FALSE} (the default), which is the correct behavior for kinetic fractionation
 factors defined as k_light/k_heavy and equilibrium fractionation factors defined as reactant/product.
-Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionatoin
-factors defined as k_heave/k_light and equilibrium fractionation factors defined as product/reactant.}
+Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionation
+factors defined as k_heavy/k_light and equilibrium fractionation factors defined as product/reactant.}
 }
 \value{
-the resulting delta value (in permil notation if \code{permil = TRUE})
+The resulting delta value (in permil notation if \code{permil = TRUE})
 }
 \description{
 Convenience function to fractionate a delta value using a fractionation factor
