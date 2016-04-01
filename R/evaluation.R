@@ -150,7 +150,7 @@ get_isotope_change_matrix <- function(ip, parameters = ip$parameters[1,], check_
     }
   }
 
-  return(flux_isotopes %>% select(-iso_stoic, -comp.isotope))
+  return(flux_isotopes %>% select(-comp.isotope))
 }
 
 #' get the isotope change summary

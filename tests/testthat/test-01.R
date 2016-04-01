@@ -82,14 +82,31 @@ test_that("Isopath structure matrices work", {
 
   expect_equal(sys %>% get_reaction_component_matrix(),
                data_frame(
-                 reaction = rep(c("rxn1", "rxn2"), each = 3),
-                 abscissa = rep(c(1, 2), each = 3),
-                 component = c("X", "X", "Y", "Y", "Z", "W"),
-                 comp_stoic = c(-1, -1, 3, -1, -2, 1),
-                 variable = c(T, T, F, F, T, T),
-                 isotope = c("C", "N", "C", "C", "unspecified", "unspecified"),
-                 iso_stoic = c(2, 1, 1, 1, 1, 1)
+                 reaction = paste0("rxn", c(1, 1, 2, 1, 2, 2)),
+                 abscissa = c(0, 1, 1, 0, 1, 2),
+                 component = c("X", "Y", "Y", "X", "Z", "W"),
+                 comp_stoic = c(-1, 3, -1, -1, -2, 1),
+                 variable = c(T, F, F, T, T, T),
+                 isotope = c("C", "C", "C", "N", "unspecified", "unspecified")
                ))
+
+
+  expect_equal(
+    isopath() %>%
+      add_component(LETTERS[1:6]) %>%
+      add_custom_reaction(A == D) %>%
+      add_custom_reaction(A == C) %>% # old reactant = new reactant
+      add_custom_reaction(D == F) %>% # old reactant = new product
+      add_custom_reaction(E == A) %>% # new reactant = old product
+      add_custom_reaction(B == D) %>% # new product  = old product
+      get_reaction_component_matrix() %>%
+      select(abscissa, component, comp_stoic),
+    data_frame(
+      abscissa = c(-1, 0, 0, 0, 0, 1, 1, 1, 1, 2),
+      component = c("E", "A", "A", "A", "B", "D", "C", "D", "D", "F"),
+      comp_stoic = c(-1, 1, -1, -1, -1, 1, 1, 1, -1, 1))
+
+  )
 
 })
 
