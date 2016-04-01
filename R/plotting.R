@@ -23,17 +23,7 @@ generate_reaction_diagram <- function(ip) {
     mutate(y = seq(-length(x)+1, length(x)-1, length.out = length(x))) %>%
     ungroup()
 
-  # determin reaction lines (with kinked lines but not accounting for parallel reactions)
-  # rxns_xy <-
-  #   general_x %>% left_join(components_xy %>% select(-x), by = c("component", "isotope")) %>%
-  #   mutate(
-  #     xstart = ifelse(comp_stoic > 0, x, x - 0.5),
-  #     xend = ifelse(comp_stoic > 0, x + 0.5, x),
-  #     ystart = ifelse(comp_stoic > 0, y, 0),
-  #     yend = ifelse(comp_stoic > 0, 0, y)
-  #   )
-
-  # direct lines but acounting for parallel reactions
+  # reaction lines (offset for parallel reaction lines)
   rxn_components_xy <-
     left_join(
       general_x %>% select(reaction, component, isotope, comp_stoic, x),
@@ -44,6 +34,14 @@ generate_reaction_diagram <- function(ip) {
       rxn_components_xy %>% filter(comp_stoic > 0) %>% rename(xstart = x, ystart = y),
       rxn_components_xy %>% filter(comp_stoic < 0) %>% rename(xend = x, yend = y),
       by = c("reaction", "isotope")
+    ) %>%
+    group_by(xstart, ystart, xend, yend) %>% arrange(reaction) %>%
+    # offset in y direction depending on multi-line reactions
+    mutate(y_offset = 0.05 * seq(-n()+1, n()-1, length.out = n())) %>%
+    ungroup() %>%
+    mutate(
+      ystart = ystart + y_offset,
+      yend = yend + y_offset
     )
 
   # plot everything

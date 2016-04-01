@@ -5,7 +5,7 @@
 #' @param ip An \link{isopath} object to which this reaction should be added.
 #' @param name Name of the reaction. Must be unique (i.e. will overwrite an existing reaction of the same name). If omitted (the default), will name the reaction based on the existing number of reactions in the \link{isopath}, e.g. "rxn4".
 #' @param eq Valid equation in chemical format a * A + b * B + ... == x * X + y * Y + ... Note that all components must already be part of the \link{isopath} (add components using \link{add_component}).
-#' @param flux the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
+#' @param flux The net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)
 #' @param ... isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)
 #' @param abscissa The reaction loaction. This is used purely for graphical representation (see \link{generate_reaction_diagram}). By default, a decent value will be guessed from the existing reactions in the \link{isopath}. This works fairly well as long as all reactions after the first one are added to the isopath in an order such that at least one reactant or product is already part of a different reaction in the pathway.
 #' @return The \link{isopath} object with the new reaction added.
