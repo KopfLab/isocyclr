@@ -1,4 +1,4 @@
-context("Struture")
+context("Structure")
 
 test_that("Generating isopath works", {
   expect_is(isopath(), "isopath")

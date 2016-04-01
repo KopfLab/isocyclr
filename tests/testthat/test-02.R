@@ -1,5 +1,19 @@
 context("Modelling")
 
+test_that("Calculations work", {
+
+  # test fractionate function
+  expect_error(fractionate(5), "no fractionation factor provided")
+  expect_error(fractionate(alpha = 0.99, eps = -10), "ambiguous fractionation factor")
+  expect_equal(fractionate(d = 10, eps = -10, permil = T), 1000*fractionate(d = 0.01, eps = -0.01, permil = F))
+  expect_equal(fractionate(d = 10, a = 0.99, mult = T), fractionate(d = 10, a = 1/0.99, mult = F))
+  expect_equal(fractionate(d = 10, a = 0.99), fractionate(d = 10, eps = -10))
+  expect_equal(fractionate(d = 0.01, a = 0.99, p = F), fractionate(d = 0.01, eps = -0.01, p = F))
+  expect_equal(fractionate(d = 0.01, a = 0.99, p = F), (0.01+1)/0.99 - 1)
+  expect_equal(fractionate(d = 5, eps = 10, p = T, mult = T), ((5/1000+1) * (10/1000+1) - 1) * 1000)
+})
+
+
 test_that("Running model works", {
 
   sys <- isopath() %>%
