@@ -21,54 +21,53 @@ add_custom_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL
 
 #' Add a simple single fractionation reaction
 #'
-#' This adds a reaction
+#' This adds a simple 1 to 1 (one reactant, one product) reaction with standard
+#' fractionation factors to the isopath (for all isotopes that are part of both
+#' reactant AND product). Supports reversibility for easy implementation of bi-
+#' directional fluxes. This is really intended as a convenience function to make
+#' it easy to set up Hayes-type reaction systems. Reaction systems that only have
+#' this kind of reaction also have the added benefit of having an analytical
+#' solution for steady state. See \link{calculate_steady_state()} to make use of
+#' this functionalty.
 #'
-#' - check later that fluxes all add up correctly
-#' - check later that the starting point is non-variable - is that actually required? prob not!
-#'
-#' @param reversibility The reversibility of the reaction. If this is omitted, the reaction is treated as being irreversible. If anything else is provided (can be a number or expression evaluating to 0 to 1), requires either a fractionation factor for the reverse reaction or an equilibrium fractionation factor to be part of the dots (\code{...}) for each isotope system involved in the reaction.
+#' @param reversibility The reversibility of the reaction. If this is omitted, the reaction is treated as being irreversible. If anything else is provided (can be a number or expression; evaluation to 0 implies no reversibility, evaluation to 1 implies full reversibility), requires either a fractionation factor for the reverse reaction or an equilibrium fractionation factor to be part of the dots (\code{...}) for each isotope system involved in the reaction.
 #' @param ... Fractionation factors for the reaction - can be numbers or expressions (referencing other variables and parameters in the system), naming convention: \code{alpha.<isotope> = ...}, or \code{eps.<isotope> = ...} for the kinetic isotope effect of the reaction in alpha or epsilon (permil) notation (with definition alpha = k_light / k_heavy and eps = (alpha - 1) * 1000, i.e. normal isotope effects are alpha > 1 and eps > 0, inverse isotope effects are alpha < 1 and eps < 0). If reaction is reversible (\code{reversible = TRUE}), a fractionation factor for the reverse reaction must be provided either directly (\code{alpha.<isotope>.rev = } or \code{eps.<isotope>.rev = ...}) or in the form of an equilibrium fractionation factor (\code{alpha.<isotope>.eq = ...} or \code{eps.<isotope>.eq = ...}) with definition alpha.eq = R_substrate / R_product = alpha / alpha.rev).
 #' @export
 #' @inheritParams add_custom_reaction
 #' @family reaction functions
-add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL, reversibility, ..., abscissa = NULL) {
+add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibility, ...,
+                                flux = NULL, abscissa = NULL, permil = TRUE) {
 
-  # name / equation flexibility
-  if (missing(eq)) {
-    eq <- deparse(substitute(name))
-    name <- NULL
-  } else {
-    eq <- deparse(substitute(eq))
-  }
+  # equation
+  eq <- deparse(substitute(eq))
 
   # reaction components
-  components <- parse_reaction_equation(eq) %>% as.list() %>% as_data_frame()
-  if (length(missing_comp <- setdiff(names(components), names(ip$components))) > 0)
+  components <-
+    parse_reaction_equation(eq) %>%
+    as.list() %>% as_data_frame() %>%
+    gather(component, comp_stoic)
+
+  # make sure it's a 1 to 1 reaction
+  rxn_stoic <- components %>% summarize(n_reactant = sum(comp_stoic < 0), n_product = sum(comp_stoic > 0))
+  if (rxn_stoic$n_reactant != 1 || rxn_stoic$n_product != 1) {
+    stop("simple reactions can only be 1 to 1 transformations: ", eq,
+         " (reactants: ", rxn_stoic$n_reactant, ", products: ", rxn_stoic$n_product, ")", call. = F)
+  }
+
+  # check for missing components
+  if (length(missing_comp <- setdiff(components$component, names(ip$components))) > 0)
     stop("missing component definition(s), make sure to add this with add_component() first: ",
          missing_comp %>% paste(collapse = ", "), call. = FALSE)
 
   # reaction isotopes summary
   rxn_isotopes <-
-    left_join(
-      components %>% gather(component, comp_stoic),
+    right_join(
       ip %>% get_component_matrix() %>% gather(isotope, iso_stoic, -component, -variable),
-      by = "component") %>%
+      components, by = "component") %>%
     filter(!is.na(iso_stoic)) %>%
     group_by(isotope) %>%
     mutate(n_reactant = sum(comp_stoic < 0),
-           n_product = sum(comp_stoic > 0))
-
-  # check that for each isotope it's a simple 1 to 1 transformation
-  problem_isotopes <- rxn_isotopes  %>%
-    filter(n_reactant > 1 | n_product > 1)
-  if (nrow(problem_isotopes) > 0) {
-    stop("simple reactions can only be 1 to 1 transformations for each isotope system, the following isotope system(s) have multiple reactants or products: ",
-         with(problem_isotopes, paste0(isotope, " (reactants: ", n_reactant, ", products: ", n_product, ")")) %>%
-           paste(collapse = ", "), call. = F)
-  }
-
-  # process only those isotopes that have exactly one reactant and one product
-  rxn_isotopes <- rxn_isotopes %>%
+           n_product = sum(comp_stoic > 0)) %>%
     filter(n_reactant == 1 & n_product == 1) %>%
     select(isotope, component, comp_stoic) %>%
     spread(comp_stoic, component)
@@ -81,7 +80,7 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL
   if (!missing(reversibility)) {
     ff_dots_pattern <- c(
       ff_dots_pattern,
-      paste0("(alpha|eps).", isotopes, ".(rev|eq)") %>% setNames(paste0(rxn_isotopes$isotope, ".rev")))
+      paste0("(alpha|eps).", rxn_isotopes$isotope, ".(rev|eq)") %>% setNames(paste0(rxn_isotopes$isotope, ".rev")))
   }
 
   # find matching dot names for each isotope
@@ -99,11 +98,85 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL
          ff_dots_missing %>% paste(collapse = ", "), call. = F)
   }
 
-  # loop through each isotope to add reaction
+  # construct flux calls
+  if (missing(reversibility)) {
+    mass_flux <- lazy(flux)
+  } else {
+    mass_flux <-
+      interp(lazy(flux(flux_, rev = rev_, dir = "+")),
+             flux_ = substitute(flux), rev_ = substitute(reversibility))
+    mass_flux_rev <-
+      interp(lazy(flux(flux_, rev = rev_, dir = "-")),
+             flux_ = substitute(flux), rev_ = substitute(reversibility))
+  }
+
+  # construct bare flux isotope calls
+  if (permil) {
+    frac_alpha <- interp(lazy(fractionate(d_, a = ff_)))
+    frac_eps <- interp(lazy(fractionate(d_, eps = ff_)))
+  } else {
+    frac_alpha <- interp(lazy(fractionate(d_, a = ff_, p = FALSE)))
+    frac_eps <- interp(lazy(fractionate(d_, eps = ff_, p = FALSE)))
+  }
+  flux_isotope <- list()
+  flux_isotope_rev <- list()
+
+  # construct calls for each isotope
   for (i in 1:nrow(rxn_isotopes)) {
-    with(rxn_isotopes[i,],{
-      message("isotope: ", isotope, " reactant: ", `-1`, " product: ", `1`)
-    })
+
+    iso <- rxn_isotopes[i,]$isotope
+    reactant <- rxn_isotopes[i,]$`-1`
+    product <- rxn_isotopes[i,]$`1`
+
+    prefix <- gsub(ff_dots_pattern[iso], "\\1", ff_dots_names[iso])
+    func <- if (prefix == "eps") frac_eps else frac_alpha
+    ff_fwd <- ff_dots[[ff_dots_names[iso]]]
+    flux_isotope[[paste0("flux.", iso)]] <-
+      interp(func,d_ = as.name(paste0(reactant, ".", iso)), ff_ = ff_fwd)
+
+    # reversible?
+    if (!missing(reversibility)) {
+      iso_rev <- paste0(iso, ".rev")
+      prefix_rev <- gsub(ff_dots_pattern[iso_rev], "\\1", ff_dots_names[iso_rev])
+
+      # figure out if equilibrium factor needs to be converted to forward
+      suffix <- gsub(ff_dots_pattern[iso_rev], "\\2", ff_dots_names[iso_rev])
+      if (suffix == "rev") {
+        func <- if (prefix_rev == "eps") frac_eps else frac_alpha
+        ff <- ff_dots[[ff_dots_names[iso_rev]]]
+      } else if (suffix == "eq") {
+        ff_fwd_alpha <- ff_fwd
+        if (prefix == "eps") {
+          # have to convert from eps to alpha
+          ff_fwd_alpha <- interp(lazy(m_ * eps_ + 1), m_ = if (permil) 0.001 else 1, eps_ = ff_fwd_alpha)
+        }
+        ff_eq_alpha <- ff_dots[[ff_dots_names[iso_rev]]]
+        if (prefix_rev == "eps") {
+          # have to convert from eps to alpha
+          ff_eq_alpha <- interp(lazy(m_ * eps_ + 1), m_ = if (permil) 0.001 else 1, eps_ = ff_eq_alpha)
+        }
+
+        # overall
+        func <- frac_alpha
+        ff <- interp(lazy(fwd/eq), fwd = ff_fwd_alpha, eq = ff_eq_alpha)
+      } else stop("should never happen")
+
+      # add to flux list
+      flux_isotope_rev[[paste0("flux.", iso)]] <-
+        interp(func,d_ = as.name(paste0(product, ".", iso)), ff_ = ff)
+    }
+
+  }
+
+  # add forward reaction
+  ip <- add_reaction_(
+    ip, eq, name = if(!missing(reversibility)) paste(name,"(forward)") else name,
+    flux = mass_flux, isotopes = flux_isotope, class = "simple", abscissa = abscissa)
+
+  if (!missing(reversibility)) {
+    ip <- add_reaction_(
+      ip, eq, name = paste(name,"(reverse)"),
+      flux = mass_flux_rev, isotopes = flux_isotope_rev, class = "simple", abscissa = abscissa)
   }
 
   return(invisible(ip))

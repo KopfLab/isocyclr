@@ -4,7 +4,7 @@
 \alias{add_reaction_}
 \title{add reaction with standard evaluation}
 \usage{
-add_reaction_(ip, name, eq, flux, isotopes = list(), abscissa = NULL,
+add_reaction_(ip, eq, name, flux, isotopes = list(), abscissa = NULL,
   class = "generic", args = list())
 }
 \arguments{
@@ -23,9 +23,5 @@ add reaction with standard evaluation
 }
 \note{
 standard evaluation
-}
-\seealso{
-Other reactions: \code{\link{add_custom_reaction}},
-  \code{\link{add_simple_reaction}}
 }
 

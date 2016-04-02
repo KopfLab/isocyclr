@@ -4,21 +4,21 @@
 \alias{add_custom_reaction}
 \title{Add a custom reaction}
 \usage{
-add_custom_reaction(ip, name = NULL, eq, flux = NULL, ...,
+add_custom_reaction(ip, eq, name = default_rxn_name(ip), flux = NULL, ...,
   abscissa = NULL)
 }
 \arguments{
 \item{ip}{An \link{isopath} object to which this reaction should be added.}
 
-\item{name}{Name of the reaction. Must be unique (i.e. will overwrite an existing reaction of the same name). If omitted (the default), will name the reaction based on the existing number of reactions in the \link{isopath}, e.g. "rxn4".}
-
 \item{eq}{Valid equation in chemical format a * A + b * B + ... == x * X + y * Y + ... Note that all components must already be part of the \link{isopath} (add components using \link{add_component}).}
 
-\item{flux}{the net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)}
+\item{name}{Name of the reaction. Must be unique (i.e. will overwrite an existing reaction of the same name). If omitted (the default), will name the reaction based on the existing number of reactions in the \link{isopath}, e.g. "rxn4".}
+
+\item{flux}{The net flux through the reaction - can be a number or expression (referencing variables and parameters in the system)}
 
 \item{...}{isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)}
 
-\item{abscissa}{The reaction loaction. This is used purely for graphical representation (see \link{generate_reaction_diagram}). By default, a decent value will be guessed from the existing reactions in the \link{isopath}. This works fairly well as long as all reactions after the first one are added to the isopath in an order such that at least one reactant or product is already part of a different reaction in the isopath.}
+\item{abscissa}{The reaction loaction. This is used purely for graphical representation (see \link{generate_reaction_diagram}). By default, a decent value will be guessed from the existing reactions in the \link{isopath}. This works fairly well as long as all reactions after the first one are added to the isopath in an order such that at least one reactant or product is already part of a different reaction in the pathway.}
 }
 \value{
 The \link{isopath} object with the new reaction added.
@@ -26,11 +26,13 @@ The \link{isopath} object with the new reaction added.
 \description{
 Anything's allowed for these, just the flux and the isotopic composition of the flux are specified.
 }
+\note{
+Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
+}
 \examples{
 isopath() \%>\% add_component(c("A", "B")) \%>\% add_custom_reaction(A == 3 * B)
 }
 \seealso{
-Other reactions: \code{\link{add_reaction_}},
-  \code{\link{add_simple_reaction}}
+Other reaction.functions: \code{\link{add_simple_reaction}}
 }
 
