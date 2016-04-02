@@ -28,7 +28,7 @@ test_that("Running model works", {
   sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
-    add_custom_reaction("rxn1", X == 2.5 * Y, flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
     set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
 
   expect_error(run_model(NULL), "can only run model for an isopath")
@@ -41,7 +41,7 @@ test_that("Running model works", {
   sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10)
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* missing isotope flux")
   sys <- sys %>%
-    add_custom_reaction("rxn1", X == 2.5 * Y, flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
     set_parameters(Y.dC = 5)
   expect_message(sys %>% run_model(2), "Running model for 2 scenarios")
   expect_message(sys %>% set_parameters(dm = 0.5) %>% run_model(2), "encountered the following error .* depleted .* pools")

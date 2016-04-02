@@ -14,19 +14,17 @@
 #' isopath() %>% add_component(c("A", "B")) %>% add_custom_reaction(A == 3 * B)
 #' @note Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
 #' @export
-add_custom_reaction <- function(ip, name = NULL, eq, flux = NULL, ..., abscissa = NULL) {
-  # allow easy use for name omission
-  if (missing(eq)) {
-    eq <- deparse(substitute(name))
-    name <- NULL
-  } else {
-    eq <- deparse(substitute(eq))
-  }
-  add_reaction_(ip, name, eq, lazy(flux),
-                isotopes = lazy_dots(...),
-                class = "custom", abscissa = abscissa)
+add_custom_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL, ..., abscissa = NULL) {
+  add_reaction_(ip, deparse(substitute(eq)), name = name, flux = lazy(flux),
+                isotopes = lazy_dots(...), class = "custom", abscissa = abscissa)
 }
 
+
+
+#' get default reaction name
+default_rxn_name <- function(ip) {
+  paste0("rxn", length(ip$reactions) + 1)
+}
 
 #' add reaction with standard evaluation
 #'
@@ -37,12 +35,10 @@ add_custom_reaction <- function(ip, name = NULL, eq, flux = NULL, ..., abscissa 
 #' @param args additional arguments (usually expressions)
 #' @export
 #' @note standard evaluation
-add_reaction_ <- function(ip, name, eq, flux, isotopes = list(), abscissa = NULL, class = "generic", args = list()) {
-  if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
+add_reaction_ <- function(ip, eq, name, flux, isotopes = list(),
+                          abscissa = NULL, class = "generic", args = list()) {
 
-  # default name
-  if (missing(name) || is.null(name))
-    name <- paste0("rxn", length(ip$reactions) + 1)
+  if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
 
   # default abscissa
   components <- parse_reaction_equation(eq)
@@ -188,10 +184,10 @@ parse_reaction_component <- function(x) {
 parse_reaction_equation <- function(eq) {
   sides <- strsplit(eq, "==", fixed = T)[[1]]
   err <- paste("please write equation in format 'a * A + b * B + ... == x * X + y * Y + ...':", eq)
-  if (length(sides) != 2) stop(err) # missing two sides
+  if (length(sides) != 2) stop(err, call. = FALSE) # missing two sides
   left <- strsplit(sides[1], "+", fixed = T)[[1]]
   right <- strsplit(sides[2], "+", fixed = T)[[1]]
-  if (length(left) == 0 || length(right) == 0) stop(err)
+  if (length(left) == 0 || length(right) == 0) stop(err, call. = FALSE)
   c(
     lapply(left, parse_reaction_component) %>% unlist() * -1,
     lapply(right, parse_reaction_component) %>% unlist() * 1
