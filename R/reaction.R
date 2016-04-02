@@ -19,7 +19,95 @@ add_custom_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL
                 isotopes = lazy_dots(...), class = "custom", abscissa = abscissa)
 }
 
+#' Add a simple single fractionation reaction
+#'
+#' This adds a reaction
+#'
+#' - check later that fluxes all add up correctly
+#' - check later that the starting point is non-variable - is that actually required? prob not!
+#'
+#' @param reversibility The reversibility of the reaction. If this is omitted, the reaction is treated as being irreversible. If anything else is provided (can be a number or expression evaluating to 0 to 1), requires either a fractionation factor for the reverse reaction or an equilibrium fractionation factor to be part of the dots (\code{...}) for each isotope system involved in the reaction.
+#' @param ... Fractionation factors for the reaction - can be numbers or expressions (referencing other variables and parameters in the system), naming convention: \code{alpha.<isotope> = ...}, or \code{eps.<isotope> = ...} for the kinetic isotope effect of the reaction in alpha or epsilon (permil) notation (with definition alpha = k_light / k_heavy and eps = (alpha - 1) * 1000, i.e. normal isotope effects are alpha > 1 and eps > 0, inverse isotope effects are alpha < 1 and eps < 0). If reaction is reversible (\code{reversible = TRUE}), a fractionation factor for the reverse reaction must be provided either directly (\code{alpha.<isotope>.rev = } or \code{eps.<isotope>.rev = ...}) or in the form of an equilibrium fractionation factor (\code{alpha.<isotope>.eq = ...} or \code{eps.<isotope>.eq = ...}) with definition alpha.eq = R_substrate / R_product = alpha / alpha.rev).
+#' @export
+#' @inheritParams add_custom_reaction
+#' @family reaction functions
+add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL, reversibility, ..., abscissa = NULL) {
 
+  # name / equation flexibility
+  if (missing(eq)) {
+    eq <- deparse(substitute(name))
+    name <- NULL
+  } else {
+    eq <- deparse(substitute(eq))
+  }
+
+  # reaction components
+  components <- parse_reaction_equation(eq) %>% as.list() %>% as_data_frame()
+  if (length(missing_comp <- setdiff(names(components), names(ip$components))) > 0)
+    stop("missing component definition(s), make sure to add this with add_component() first: ",
+         missing_comp %>% paste(collapse = ", "), call. = FALSE)
+
+  # reaction isotopes summary
+  rxn_isotopes <-
+    left_join(
+      components %>% gather(component, comp_stoic),
+      ip %>% get_component_matrix() %>% gather(isotope, iso_stoic, -component, -variable),
+      by = "component") %>%
+    filter(!is.na(iso_stoic)) %>%
+    group_by(isotope) %>%
+    mutate(n_reactant = sum(comp_stoic < 0),
+           n_product = sum(comp_stoic > 0))
+
+  # check that for each isotope it's a simple 1 to 1 transformation
+  problem_isotopes <- rxn_isotopes  %>%
+    filter(n_reactant > 1 | n_product > 1)
+  if (nrow(problem_isotopes) > 0) {
+    stop("simple reactions can only be 1 to 1 transformations for each isotope system, the following isotope system(s) have multiple reactants or products: ",
+         with(problem_isotopes, paste0(isotope, " (reactants: ", n_reactant, ", products: ", n_product, ")")) %>%
+           paste(collapse = ", "), call. = F)
+  }
+
+  # process only those isotopes that have exactly one reactant and one product
+  rxn_isotopes <- rxn_isotopes %>%
+    filter(n_reactant == 1 & n_product == 1) %>%
+    select(isotope, component, comp_stoic) %>%
+    spread(comp_stoic, component)
+
+  # fractionation factors from dots
+  ff_dots <- lazy_dots(...)
+
+  # construct allowed pattern for the dots for the relevat isotopes
+  ff_dots_pattern <- paste0("(alpha|eps).", rxn_isotopes$isotope) %>% setNames(rxn_isotopes$isotope)
+  if (!missing(reversibility)) {
+    ff_dots_pattern <- c(
+      ff_dots_pattern,
+      paste0("(alpha|eps).", isotopes, ".(rev|eq)") %>% setNames(paste0(rxn_isotopes$isotope, ".rev")))
+  }
+
+  # find matching dot names for each isotope
+  ff_dots_names <- sapply(ff_dots_pattern, function(i){
+    ff_name <- gsub(".", "\\.", paste0("^", i, "$"), fixed = T) %>% grep(names(ff_dots), value = T)
+    if (length(ff_name) == 0) return (NA)
+    else if (length(ff_name) > 1) stop("shouldn't be possible to happen")
+    return (ff_name)
+  })
+
+  # stop if any of the required ff dots are missing
+  ff_dots_missing <- ff_dots_pattern[is.na(ff_dots_names)]
+  if (length(ff_dots_missing) > 0) {
+    stop("not all required fractionation factors available, missing: ",
+         ff_dots_missing %>% paste(collapse = ", "), call. = F)
+  }
+
+  # loop through each isotope to add reaction
+  for (i in 1:nrow(rxn_isotopes)) {
+    with(rxn_isotopes[i,],{
+      message("isotope: ", isotope, " reactant: ", `-1`, " product: ", `1`)
+    })
+  }
+
+  return(invisible(ip))
+}
 
 #' get default reaction name
 default_rxn_name <- function(ip) {
