@@ -72,21 +72,32 @@ run_model <- function(ip, time_steps, ..., quiet = F) {
           select(variable, `dx/dt`)
       )
 
-    # make sure they are the right order (as required in ode func)
-    dx <- dxdt$`dx/dt`[sapply(names(y), function(i) which(i == dxdt$variable))]
+    # put the dx in the right order and fill in the constants (0s)
+    dx <- c()
+    for (name in names(y)) {
+      i <- which(name == dxdt$variable)
+      if (length(i) == 1)
+        dx <- c(dx, dxdt$`dx/dt`[i])
+      else
+        dx <- c(dx, 0) # non-variable parameters
+    }
+
+    # convert to list
     return(list(dx))
   }
 
   # variables and constants in the system (i.e. non-variable parameters)
-  variables <- ip$info$variables
-  constants <- setdiff(names(ip$parameters), variables)
+  # In order to allow events to affect parameters as well as constants, treating
+  # them all as variable with dx/dts evaluating to 0 for all parameters.
+  variables <- names(ip$parameters)
+  constants <- c()
 
   # info
   if (!quiet) message(sprintf("Running model for %d scenarios...", nrow(ip$parameters)))
 
   # run each scenario by grouping by each row
   ip$parameters %>%
-    group_by_(.dots = names(ip$parameters)) %>%
+    group_by_(.dots = c(variables, constants)) %>%
     do({
       # time steps
       times <- seq(0, lazy_eval(steps_exp, data = .[constants]), by = 1)
@@ -106,5 +117,6 @@ run_model <- function(ip, time_steps, ..., quiet = F) {
       sln %>% as.data.frame() %>% return()
 
     }) %>%
-    ungroup()
+    ungroup() %>%
+    select_(.dots = c("time", c(variables, constants)))
 }
