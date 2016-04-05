@@ -33,6 +33,6 @@ solution for steady state. See \link{calculate_steady_state()} to make use of
 this functionalty.
 }
 \seealso{
-Other reaction.functions: \code{\link{add_custom_reaction}}
+Other reaction functions: \code{\link{add_custom_reaction}}
 }
 

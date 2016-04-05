@@ -13,4 +13,14 @@ get_isotope_change_matrix(ip, parameters = ip$parameters[1, ],
 \description{
 get isotope change matrix by reaction and component + isotope
 }
+\seealso{
+Other system information: \code{\link{get_component_change_matrix}},
+  \code{\link{get_component_change_summary}},
+  \code{\link{get_component_matrix}},
+  \code{\link{get_flux_isotope_matrix}},
+  \code{\link{get_flux_matrix}},
+  \code{\link{get_isotope_change_summary}},
+  \code{\link{get_reaction_component_matrix}},
+  \code{\link{get_reaction_matrix}}
+}
 

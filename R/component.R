@@ -36,6 +36,7 @@ add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
 
 #' get the component matrix for an isopath
 #' @param na how to group compounds that have no isotopes specified
+#' @family system information
 #' @export
 get_component_matrix <- function(ip, na = "unspecified") {
   if (!is(ip, "isopath")) stop ("can only get component matrix from an isopath")

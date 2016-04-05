@@ -1,6 +1,6 @@
 #' check if system is ready for model run
 check_model <- function(ip) {
-  if (!is(ip, "isopath")) stop ("can only check model ready for an isopath", call. = F)
+  if (!is(ip, "isopath")) stop ("can only check model ready for an isopath", call. = FALSE)
 
   tryCatch({
 
@@ -15,7 +15,7 @@ check_model <- function(ip) {
       group_by_(.dots = names(ip$parameters)) %>%
       do({
         # safety checks - will through errors if needed
-        if (nrow(.) != 1) stop("there seem to be multiple identical run scenarios, please make sure each set of parameters is unique", call. = F)
+        if (nrow(.) != 1) stop("there seem to be multiple identical run scenarios, please make sure each set of parameters is unique", call. = FALSE)
         get_component_change_summary(ip, param = ., check_missing = TRUE)
         get_isotope_change_summary(ip, param = ., check_missing = TRUE)
       })
@@ -36,8 +36,8 @@ check_model <- function(ip) {
 #'
 #' @param time_steps the number of time steps, can be a number or expression (referring to a parameter in the isopath)
 #' @param ... additional parameters passed on to the \link{ode} solver
-run_model <- function(ip, time_steps, ..., quiet = F) {
-  if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = F)
+run_model <- function(ip, time_steps, ..., quiet = FALSE) {
+  if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
 
   # model ready checks
   if (missing(time_steps))
@@ -52,8 +52,8 @@ run_model <- function(ip, time_steps, ..., quiet = F) {
 
     # get ODE solutions
     ode_state <- (c(as.list(y), params))
-    component_change <- ip %>% get_component_change_summary(param = ode_state, check_missing = F)
-    isotope_change <- ip %>% get_isotope_change_summary(param = ode_state, check_missing = F)
+    component_change <- ip %>% get_component_change_summary(param = ode_state, check_missing = FALSE)
+    isotope_change <- ip %>% get_isotope_change_summary(param = ode_state, check_missing = FALSE)
 
     # make sure not running out of any component
     if (any(with(component_change, pool_size + `dx/dt` < 0))) {

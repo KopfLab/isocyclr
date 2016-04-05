@@ -22,7 +22,7 @@ flux <- function(net, reversibility, direction, model_offset = 1e-9){
     dir_flux <- net / (1 - reversibility) * reversibility
     dir_sign <- -1
   } else
-    stop("direction not recognized: ", direction, call. = F)
+    stop("direction not recognized: ", direction, call. = FALSE)
 
   # check for problems (this takes some processing - any way to get around even more?)
   if (any(is.infinite(dir_flux))) {

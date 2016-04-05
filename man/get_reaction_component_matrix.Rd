@@ -9,4 +9,14 @@ get_reaction_component_matrix(ip)
 \description{
 get the combined reaction_component_matrix
 }
+\seealso{
+Other system information: \code{\link{get_component_change_matrix}},
+  \code{\link{get_component_change_summary}},
+  \code{\link{get_component_matrix}},
+  \code{\link{get_flux_isotope_matrix}},
+  \code{\link{get_flux_matrix}},
+  \code{\link{get_isotope_change_matrix}},
+  \code{\link{get_isotope_change_summary}},
+  \code{\link{get_reaction_matrix}}
+}
 

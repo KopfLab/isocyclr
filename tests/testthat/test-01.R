@@ -47,7 +47,7 @@ test_that("System info cache works", {
     add_component("A", N) %>%
     add_component("B", N, variable = FALSE)
   expect_equal(sys$info$reaction_component_matrix, sys %>% get_reaction_component_matrix())
-  expect_equal(sys$info$variable_reaction_component_matrix, sys %>% get_reaction_component_matrix() %>% filter(variable == T))
+  expect_equal(sys$info$variable_reaction_component_matrix, sys %>% get_reaction_component_matrix() %>% filter(variable == TRUE))
   expect_equal(sys$info$variables, sys %>% get_variables())
 })
 
@@ -166,10 +166,10 @@ test_that("Evaluation works", {
 
   # flux matrix
   expect_equal(sys  %>% get_flux_matrix(), data_frame(reaction = "rxn1", flux = "dm"))
-  expect_error(sys  %>% get_flux_matrix(eval = T))
-  expect_equal(sys  %>% get_flux_matrix(eval = T, param = data_frame(dm = 3)), data_frame(reaction = "rxn1", flux = 3))
+  expect_error(sys  %>% get_flux_matrix(eval = TRUE))
+  expect_equal(sys  %>% get_flux_matrix(eval = TRUE, param = data_frame(dm = 3)), data_frame(reaction = "rxn1", flux = 3))
   expect_equal(sys %>% set_parameters(dm = 3) %>%
-                 get_flux_matrix(eval = T), data_frame(reaction = "rxn1", flux = 3))
+                 get_flux_matrix(eval = TRUE), data_frame(reaction = "rxn1", flux = 3))
 
   # flux component summary
   expect_equal(sys %>% set_parameters(dm = 2) %>%
@@ -181,14 +181,14 @@ test_that("Evaluation works", {
                          component = c("X", "Y", "X", "Y"),
                          flux_isotope = c("dN", "dN", "X.dC", "Y.dC"))
   expect_equal(sys  %>% get_flux_isotope_matrix(), expected)
-  expect_error(sys  %>% get_flux_isotope_matrix(eval = T))
+  expect_error(sys  %>% get_flux_isotope_matrix(eval = TRUE))
   expect_equal(sys  %>%
-                 get_flux_isotope_matrix(eval = T,
+                 get_flux_isotope_matrix(eval = TRUE,
                                          param = data_frame(dN = 0.1, X.dC = 0.4, Y.dC = 0.6)),
                expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
   expect_equal(sys %>%
                  set_parameters(dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
-                 get_flux_isotope_matrix(eval = T),
+                 get_flux_isotope_matrix(eval = TRUE),
                expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
 
   expect_equal(sys  %>% set_parameters(dm = 2, dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%

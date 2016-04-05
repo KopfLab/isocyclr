@@ -12,4 +12,14 @@ get_component_matrix(ip, na = "unspecified")
 \description{
 get the component matrix for an isopath
 }
+\seealso{
+Other system information: \code{\link{get_component_change_matrix}},
+  \code{\link{get_component_change_summary}},
+  \code{\link{get_flux_isotope_matrix}},
+  \code{\link{get_flux_matrix}},
+  \code{\link{get_isotope_change_matrix}},
+  \code{\link{get_isotope_change_summary}},
+  \code{\link{get_reaction_component_matrix}},
+  \code{\link{get_reaction_matrix}}
+}
 

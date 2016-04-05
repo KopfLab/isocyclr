@@ -51,7 +51,7 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
   rxn_stoic <- components %>% summarize(n_reactant = sum(comp_stoic < 0), n_product = sum(comp_stoic > 0))
   if (rxn_stoic$n_reactant != 1 || rxn_stoic$n_product != 1) {
     stop("simple reactions can only be 1 to 1 transformations: ", eq,
-         " (reactants: ", rxn_stoic$n_reactant, ", products: ", rxn_stoic$n_product, ")", call. = F)
+         " (reactants: ", rxn_stoic$n_reactant, ", products: ", rxn_stoic$n_product, ")", call. = FALSE)
   }
 
   # check for missing components
@@ -85,7 +85,7 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
 
   # find matching dot names for each isotope
   ff_dots_names <- sapply(ff_dots_pattern, function(i){
-    ff_name <- gsub(".", "\\.", paste0("^", i, "$"), fixed = T) %>% grep(names(ff_dots), value = T)
+    ff_name <- gsub(".", "\\.", paste0("^", i, "$"), fixed = T) %>% grep(names(ff_dots), value = TRUE)
     if (length(ff_name) == 0) return (NA)
     else if (length(ff_name) > 1) stop("shouldn't be possible to happen")
     return (ff_name)
@@ -95,7 +95,7 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
   ff_dots_missing <- ff_dots_pattern[is.na(ff_dots_names)]
   if (length(ff_dots_missing) > 0) {
     stop("not all required fractionation factors available, missing: ",
-         ff_dots_missing %>% paste(collapse = ", "), call. = F)
+         ff_dots_missing %>% paste(collapse = ", "), call. = FALSE)
   }
 
   # construct flux calls
@@ -226,7 +226,7 @@ add_reaction_ <- function(ip, eq, name, flux, isotopes = list(),
   # parse isotopes list for compound names (isotope.component)
   isotope.components <- c()
   for (iso in names(isotopes)) {
-    parts <- strsplit(iso, ".", fixed = T)[[1]]
+    parts <- strsplit(iso, ".", fixed = TRUE)[[1]]
     if ( length(parts) == 1) {
       ip$reactions[[name]]$isotopes[[parts[1]]] <- isotopes[[iso]]
     } else if (length(parts) == 2) {
@@ -292,6 +292,7 @@ default_abscissa <- function(ip, new_components) {
 }
 
 #' get the reaction matrix for an isopath
+#' @family system information
 #' @export
 get_reaction_matrix <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
@@ -303,6 +304,7 @@ get_reaction_matrix <- function(ip) {
 }
 
 #' get the combined reaction_component_matrix
+#' @family system information
 #' @export
 get_reaction_component_matrix <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
@@ -335,7 +337,7 @@ parse_reaction_component <- function(x) {
   m <- regexec("^\\s*(\\d+\\.?\\d*)?( \\* )?(\\w+)\\s*$", x)
   parts <- regmatches(x, m)[[1]]
   if ( length(parts) == 0)
-    stop("cannot parse component: ", x, call. = F)
+    stop("cannot parse component: ", x, call. = FALSE)
   value <- if (parts[2] == "") 1 else as.numeric(parts[2])
   return(value %>% setNames(parts[4]))
 }
@@ -343,11 +345,11 @@ parse_reaction_component <- function(x) {
 #' parse reaction equation into its components
 #' @note standard evaluation
 parse_reaction_equation <- function(eq) {
-  sides <- strsplit(eq, "==", fixed = T)[[1]]
+  sides <- strsplit(eq, "==", fixed = TRUE)[[1]]
   err <- paste("please write equation in format 'a * A + b * B + ... == x * X + y * Y + ...':", eq)
   if (length(sides) != 2) stop(err, call. = FALSE) # missing two sides
-  left <- strsplit(sides[1], "+", fixed = T)[[1]]
-  right <- strsplit(sides[2], "+", fixed = T)[[1]]
+  left <- strsplit(sides[1], "+", fixed = TRUE)[[1]]
+  right <- strsplit(sides[2], "+", fixed = TRUE)[[1]]
   if (length(left) == 0 || length(right) == 0) stop(err, call. = FALSE)
   c(
     lapply(left, parse_reaction_component) %>% unlist() * -1,
