@@ -26,13 +26,202 @@ get_variables <- function(ip){
     unlist() %>% unname()
 }
 
+#' get the reaction matrix for an isopath
+#' @param evaluate if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)
+#' @param parameters data to use for evaluating expressions
+#' @family system information
+#' @note TODO: write tests and replace get_reaction_matrix
+#' @export
+get_reaction_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+  if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
+
+  lapply(ip$reactions, function(i) {
+    c(list(reaction = i$name, abscissa = i$abscissa),
+      as.list(i$components),
+      list(flux = if (evaluate) lazy_eval(i$flux, parameters) else deparse(i$flux$expr))) %>%
+      as_data_frame()
+  }) %>%
+    bind_rows()
+}
+
+#' get the combined reaction_component_matrix
+#' @inheritParams get_reaction_matrix
+#' @family system information
+#' @note TODO: write tests and replace get_reaction_component_matrix
+#' @export
+get_reaction_component_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+  if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
+
+  cps <- ip %>% get_component_matrix()
+  rxn <- ip %>% get_reaction_matrix2(eval = evaluate, param = parameters)
+
+  if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
+
+  # pool size for reaction component
+  get_size <- function(component) {
+    eq <- interp(lazy(pool_), pool_ = as.name(component))
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # dx/dt for reaction component
+  get_change <- function(rxn, comp_stoic, variable) {
+    if (!variable) return(0)
+    eq <- interp(lazy(stoi_ * flux_), stoi_ = comp_stoic, flux_ = ip$reactions[[rxn]]$flux)
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # construct data frame
+  left_join(
+    rxn %>% gather(component, comp_stoic, -reaction, -abscissa, -flux),
+    cps %>% select(component, variable),
+    by = "component") %>%
+    # remove listings that don't have the component
+    filter(!is.na(comp_stoic)) %>%
+    # get pool size and dx/dt
+    mutate(
+      pool_size = mapply(get_size, component),
+      `dx/dt` = mapply(get_change, reaction, comp_stoic, variable)) %>%
+    # calculate abscissa for each component
+    mutate(abscissa = abscissa - ifelse(comp_stoic < 0, 1, 0 )) %>%
+    # arrange by component, then abscissa
+    arrange(component, abscissa, reaction) %>%
+    # order columns
+    select(component, abscissa, variable, reaction, comp_stoic, flux, pool_size, `dx/dt`)
+}
+
+#' get the combined reaction_isotope_matrix
+#' @inheritParams get_reaction_matrix
+#' @family system information
+#' @note TODO: write tests and replace all the get_flux... functions!!
+#' @export
+get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+  if (!is(ip, "isopath")) stop ("can only calculate reaction isotope matrix from an isopath")
+
+  # component and reaction matrices
+  cps <- ip %>% get_component_matrix()
+  rxn <- ip %>% get_reaction_matrix2(eval = evaluate, param = parameters)
+
+  if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
+
+  # pool size and isotopic composition
+  get_size <- function(component) {
+    eq <- interp(lazy(pool_), pool_ = as.name(component))
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+  get_isotope <- function(component, isotope) {
+    eq <- interp(lazy(pool_iso_), pool_iso_ = as.name(paste0(component, ".", isotope)))
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # flux isotope
+  get_flux_isotope_eq <- function(rxn, component, isotope) {
+    iso <- ip$reactions[[rxn]]$isotopes[[isotope]]
+    if (iso %>% is("lazy")) return(iso) # flux isotopes for all components
+    else return(iso[[component]]) # component specific
+  }
+  get_flux_isotope <- function(rxn, component, isotope) {
+    eq <- get_flux_isotope_eq(rxn, component, isotope)
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # get dx/dt for isotope
+  get_isotope_change <- function(rxn, component, isotope, comp_stoic, variable) {
+    if (!variable) return(0)
+    iso <- get_flux_isotope_eq(rxn, component, isotope)
+    eq <- interp(lazy(stoi_ * flux_ / pool_ * (flux_iso_ - pool_iso_)),
+                 stoi_ = comp_stoic, flux_ = ip$reactions[[rxn]]$flux,
+                 pool_ = as.name(component),
+                 flux_iso_ = iso,
+                 pool_iso_ = as.name(paste0(component, ".", isotope)))
+    if (evaluate) lazy_eval(eq, parameters)
+    else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # construct data frame
+  left_join(
+    rxn %>% gather(component, comp_stoic, -reaction, -abscissa, -flux),
+    cps %>% gather(isotope, iso_stoic, -component, -variable),
+    by = "component"
+  ) %>%
+    # remove listings that don't have component or isotope
+    filter(!is.na(comp_stoic), !is.na(iso_stoic)) %>%
+    # flux and pool isotopic composition, plus dx/dt
+    mutate(
+      pool_size = mapply(get_size, component),
+      pool_isotope = mapply(get_isotope, component, isotope),
+      flux_isotope = mapply(get_flux_isotope, reaction, component, isotope),
+      `dx/dt` = mapply(get_isotope_change, reaction, component, isotope, comp_stoic, variable)) %>%
+    # calculate abscissa for each component
+    mutate(abscissa = abscissa - ifelse(comp_stoic < 0, 1, 0 )) %>%
+    # arrange by isotope, then abscissa, rxn, etc.
+    arrange(isotope, abscissa, component, reaction) %>%
+    # order columns
+    select(isotope, component, abscissa, variable, reaction, comp_stoic,
+           flux, flux_isotope, pool_size, pool_isotope, `dx/dt`)
+}
+
+#' get the ODE
+#'
+#' Get the system of ordinary differential equations
+#'
+#' @inheritParams get_reaction_matrix
+#' @family system information
+#' @note TODO: write tests and replace all the get_flux... functions!!
+#' @export
+get_ode_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+  if (!is(ip, "isopath")) stop ("can only calculate ode matrix from an isopath")
+
+  # value
+  get_value <- function(component) {
+    eq <- interp(lazy(pool_), pool_ = as.name(component))
+    if (evaluate) {
+      value <- lazy_eval(eq, parameters)
+      if (length(value) == 1) return(value)
+      else if (length(value) == 0) return(NA)
+      else stop("should not be possible to happen")
+    } else deparse(eq$expr, width.cutoff = 500L) %>% paste0(collapse = "")
+  }
+
+  # get net isotope change
+  get_net_change <- function(eq_text) {
+    if (evaluate) {
+      eq <- interp(lazy(x), x = parse(text = eq_text, keep.source = F, n = NULL)[[1]])
+      value <- lazy_eval(eq, parameters)
+      if (length(value) == 1) return(value)
+      else if (length(value) == 0) return(NA)
+      else stop("should not be possible to happen")
+    } else return(eq_text)
+  }
+
+  bind_rows(
+    ip %>% get_reaction_component_matrix2(eval = F) %>%
+      select(x = component, variable, `dx/dt`),
+    ip %>% get_reaction_isotope_matrix(eval = F) %>%
+      mutate(x = paste0(component, ".", isotope)) %>%
+      select(x, variable, `dx/dt`)
+  ) %>%
+    filter(variable == TRUE) %>%
+    group_by(x) %>%
+    summarize(eqn_net = paste(`dx/dt`, collapse = " + ")) %>%
+    mutate(
+      value = mapply(get_value, x),
+      `dx/dt` = mapply(get_net_change, eqn_net)
+    ) %>%
+    select(x, value, `dx/dt`)
+}
+
 #' store the information about the system in the info list
 #' (this is done for performance reasons to reduce time
 #' intenstive calculations during ode integrations)
 store_info <- function(ip) {
   stopifnot(is(ip, "isopath"))
   ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()
-  ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == T)
+  ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == TRUE)
   ip$info$variables <- ip %>% get_variables()
   return(invisible(ip))
 }

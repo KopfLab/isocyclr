@@ -39,7 +39,7 @@ test_that("Running model works", {
   sys <- sys %>% set_parameters(X = c(1, 2))
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* object .* not found")
   sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10)
-  expect_error(run_model(sys, 5), "encountered the following error during pre-check .* missing isotope flux")
+  expect_error(run_model(sys, 5), "encountered the following error during pre-check .* some derivatives could not be computed")
   sys <- sys %>%
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
     set_parameters(Y.dC = 5)
