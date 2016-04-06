@@ -48,7 +48,7 @@ test_that("System info cache works", {
     add_component("B", N, variable = FALSE)
   expect_equal(sys$info$reaction_component_matrix, sys %>% get_reaction_component_matrix())
   expect_equal(sys$info$variable_reaction_component_matrix, sys %>% get_reaction_component_matrix() %>% filter(variable == TRUE))
-  expect_equal(sys$info$variables, sys %>% get_variables())
+
 })
 
 test_that("Isopath structure matrices work", {
@@ -131,8 +131,6 @@ test_that("Adding parameters works", {
     add_isotope("C") %>%
     add_component("X", C) %>%
     add_component("Y", C)
-  expect_equal( get_variables(sys), c("X", "X.C", "Y", "Y.C") )
-  expect_equal( sys %>% add_component("X", C, variable = F) %>% get_variables(), c("Y", "Y.C") )
   expect_equal( {sys2 <- set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4)); sys2$parameters},
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys, X = 1, X.C = 2, Y = 3, Y.C = 4)$parameters,
@@ -166,15 +164,12 @@ test_that("Evaluation works", {
 
   # flux matrix
   expect_equal(sys  %>% get_flux_matrix(), data_frame(reaction = "rxn1", flux = "dm"))
-  expect_error(sys  %>% get_flux_matrix(eval = TRUE))
   expect_equal(sys  %>% get_flux_matrix(eval = TRUE, param = data_frame(dm = 3)), data_frame(reaction = "rxn1", flux = 3))
   expect_equal(sys %>% set_parameters(dm = 3) %>%
                  get_flux_matrix(eval = TRUE), data_frame(reaction = "rxn1", flux = 3))
 
   # flux component summary
-  expect_equal(sys %>% set_parameters(dm = 2) %>%
-                 get_component_change_summary(),
-               data_frame(component = c("X", "Y"), pool_size = c(1, 1), `dx/dt` = c(-2, 4)))
+  # FIXME update documentation
 
   # flux isotopes matrix
   expected <- data_frame(reaction = "rxn1", isotope = c("N", "N", "C", "C"),
@@ -192,10 +187,9 @@ test_that("Evaluation works", {
                expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
 
   expect_equal(sys  %>% set_parameters(dm = 2, dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
-                 get_isotope_change_summary(),
-               data_frame(isotope = c("N", "N", "C", "C"),
-                          component = c("X", "Y", "X", "Y"),
-                          pool_isotope = c(1, 1, 1, 1),
-                          `dx/dt` = c(1.8, -3.6, 1.2, -1.6)))
+                 get_ode_matrix(eval = T),
+               data_frame(x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"),
+                          value = c(1, 1, 1, 1, 1, 1),
+                          `dx/dt` = c(-2.0, 1.2, 1.8, 4.0, -1.6, -3.6)))
 
 })

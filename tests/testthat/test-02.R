@@ -33,7 +33,7 @@ test_that("Running model works", {
 
   expect_error(run_model(NULL), "can only run model for an isopath")
   expect_error(run_model(sys), "time_steps is required")
-  expect_error(run_model(sys, 5), "encountered the following error during pre-check .* parameters required for minimal parameter set missing")
+  expect_error(run_model(sys, 5), "encountered the following error during pre-check .* object 'X' not found")
   sys <- sys %>% set_parameters(X = c(1, 1))
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* there seem to be multiple identical run scenarios")
   sys <- sys %>% set_parameters(X = c(1, 2))

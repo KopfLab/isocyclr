@@ -33,6 +33,7 @@ check_model <- function(ip) {
   return(invisible(ip))
 }
 
+
 #' Run the reaction model
 #'
 #' Run it for a certain number of time steps.

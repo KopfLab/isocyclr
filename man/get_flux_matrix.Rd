@@ -21,7 +21,11 @@ Other system information: \code{\link{get_component_change_matrix}},
   \code{\link{get_flux_isotope_matrix}},
   \code{\link{get_isotope_change_matrix}},
   \code{\link{get_isotope_change_summary}},
+  \code{\link{get_ode_matrix}},
+  \code{\link{get_reaction_component_matrix2}},
   \code{\link{get_reaction_component_matrix}},
+  \code{\link{get_reaction_isotope_matrix}},
+  \code{\link{get_reaction_matrix2}},
   \code{\link{get_reaction_matrix}}
 }
 

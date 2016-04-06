@@ -11,21 +11,6 @@ isopath <- function() {
   ), class = "isopath")
 }
 
-#' Get the dynamic variables in the system
-#' @export
-get_variables <- function(ip){
-  if (!is(ip, "isopath")) stop ("need an isopath to generate a list of dynamics variables")
-
-  ip$components %>%
-    lapply(function(i) {
-      if (i$variable) # only variable components are included
-        c(i$name, paste0(i$name, ".", names(i$isotopes)))
-      else
-        c()
-    }) %>%
-    unlist() %>% unname()
-}
-
 #' get the reaction matrix for an isopath
 #' @param evaluate if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)
 #' @param parameters data to use for evaluating expressions
@@ -222,7 +207,6 @@ store_info <- function(ip) {
   stopifnot(is(ip, "isopath"))
   ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()
   ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == TRUE)
-  ip$info$variables <- ip %>% get_variables()
   return(invisible(ip))
 }
 
