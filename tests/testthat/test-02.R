@@ -28,7 +28,7 @@ test_that("Running model works", {
   sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
-    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux.N = dN, flux.X.C = X.dC) %>%
     set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
 
   expect_error(run_model(NULL), "can only run model for an isopath")

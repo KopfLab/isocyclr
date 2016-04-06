@@ -106,6 +106,7 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
   get_flux_isotope_eq <- function(rxn, component, isotope) {
     iso <- ip$reactions[[rxn]]$isotopes[[isotope]]
     if (iso %>% is("lazy")) return(iso) # flux isotopes for all components
+    else if (is.null(iso[[component]])) return(interp(lazy(x), x = as.name(paste0(component, ".", isotope)))) # no isotope effect
     else return(iso[[component]]) # component specific
   }
   get_flux_isotope <- function(rxn, component, isotope) {
@@ -194,8 +195,8 @@ get_ode_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,])
     group_by(x) %>%
     summarize(eqn_net = paste(`dx/dt`, collapse = " + ")) %>%
     mutate(
-      value = mapply(get_value, x),
-      `dx/dt` = mapply(get_net_change, eqn_net)
+      value = mapply(get_value, x) %>% unname(),
+      `dx/dt` = mapply(get_net_change, eqn_net) %>% unname()
     ) %>%
     select(x, value, `dx/dt`)
 }

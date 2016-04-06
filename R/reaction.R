@@ -14,8 +14,8 @@
 #' isopath() %>% add_component(c("A", "B")) %>% add_custom_reaction(A == 3 * B)
 #' @note Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
 #' @export
-add_custom_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL, ..., abscissa = NULL) {
-  add_reaction_(ip, deparse(substitute(eq)), name = name, flux = lazy(flux),
+add_custom_reaction <- function(ip, equation, name = default_rxn_name(ip), flux = NULL, ..., abscissa = NULL) {
+  add_reaction_(ip, deparse(substitute(equation)), name = name, flux = lazy(flux),
                 isotopes = lazy_dots(...), class = "custom", abscissa = abscissa)
 }
 
@@ -30,16 +30,18 @@ add_custom_reaction <- function(ip, eq, name = default_rxn_name(ip), flux = NULL
 #' solution for steady state. See \link{calculate_steady_state()} to make use of
 #' this functionalty.
 #'
-#' @param reversibility The reversibility of the reaction. If this is omitted, the reaction is treated as being irreversible. If anything else is provided (can be a number or expression; evaluation to 0 implies no reversibility, evaluation to 1 implies full reversibility), requires either a fractionation factor for the reverse reaction or an equilibrium fractionation factor to be part of the dots (\code{...}) for each isotope system involved in the reaction.
-#' @param ... Fractionation factors for the reaction - can be numbers or expressions (referencing other variables and parameters in the system), naming convention: \code{alpha.<isotope> = ...}, or \code{eps.<isotope> = ...} for the kinetic isotope effect of the reaction in alpha or epsilon (permil) notation (with definition alpha = k_light / k_heavy and eps = (alpha - 1) * 1000, i.e. normal isotope effects are alpha > 1 and eps > 0, inverse isotope effects are alpha < 1 and eps < 0). If reaction is reversible (\code{reversible = TRUE}), a fractionation factor for the reverse reaction must be provided either directly (\code{alpha.<isotope>.rev = } or \code{eps.<isotope>.rev = ...}) or in the form of an equilibrium fractionation factor (\code{alpha.<isotope>.eq = ...} or \code{eps.<isotope>.eq = ...}) with definition alpha.eq = R_substrate / R_product = alpha / alpha.rev).
+#' @param reversibility The reversibility of the reaction. If this is omitted, the reaction is treated as being completely irreversible if a kinetic fractionation factor (\code{alpha.<isotope>} or \code{eps.<isotope>}) is provided or as in full equilibrium if an equilibrium fractionation factor (\code{alpha.<isotope>.eq} or \code{eps.<isotope>.eq}) is provided. If anything else is provided (can be a number or expression; evaluation to 0 implies no reversibility, evaluation to 1 implies full reversibility), requires either a fractionation factor for the reverse reaction or an equilibrium fractionation factor to be defined in the dots (\code{...}) in addition to the forward kinetic effect for each isotope system involved in the reaction.
+#' @param ... Fractionation factors for the reaction - can be numbers or expressions (referencing other variables and parameters in the system), naming convention: \code{alpha.<isotope> = ...}, or \code{eps.<isotope> = ...} for the kinetic isotope effect of the reaction in alpha or epsilon (permil) notation (with definition alpha = k_light / k_heavy and eps = (alpha - 1) * 1000, i.e. normal isotope effects are alpha > 1 and eps > 0, inverse isotope effects are alpha < 1 and eps < 0), and \code{alpha.<isotope>eq ...} or \code{eps.<isotope> = ...} for equilibrium isotope effects. If only kinetic fractionation factors are provided the reaction is created as an irreversible reaction, if only equilibrium fractionation factors are provided, it's created as an equilibrium reaction. For anything in between, use the \code{reversibility} parameter, If reversibility is set, a fractionation factor for the reverse reaction must be provided either directly (\code{alpha.<isotope>.rev = } or \code{eps.<isotope>.rev = ...}) or in the form of the equilibrium fractionation factor (\code{alpha.<isotope>.eq = ...} or \code{eps.<isotope>.eq = ...}). All equilibrium fractionatino factors are interpreted as product/substrate or substrate/product depending on the \code{eq_ratio} parameter..
+#' @param permil Whether the delta and epsilon values are in permil notation (i.e. all multiplied by 1000) or not. All must be in the same notation.
+#' @param eq_ratio eq_ratio Whether equilibrium fractionation factors are provided as product / substrate ratios (the default) or substrate / product ratios.
 #' @export
 #' @inheritParams add_custom_reaction
 #' @family reaction functions
-add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibility, ...,
-                                flux = NULL, abscissa = NULL, permil = TRUE) {
+add_simple_reaction <- function(ip, equation, name = default_rxn_name(ip), reversibility, ...,
+                                flux = NULL, permil = TRUE, eq_ratio = c("P/S", "S/P"), abscissa = NULL){
 
   # equation
-  eq <- deparse(substitute(eq))
+  eq <- deparse(substitute(equation))
 
   # reaction components
   components <-
@@ -76,10 +78,13 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
   ff_dots <- lazy_dots(...)
 
   # construct allowed pattern for the dots for the relevat isotopes
-  ff_dots_pattern <- paste0("(alpha|eps).", rxn_isotopes$isotope) %>% setNames(rxn_isotopes$isotope)
-  if (!missing(reversibility)) {
+  if (missing(reversibility)) {
+    # irreversible or equilibrium reaction
+    ff_dots_pattern <- paste0("(alpha|eps).", rxn_isotopes$isotope, "(.eq)?") %>% setNames(rxn_isotopes$isotope)
+  } else  {
+    # reversible reaction
     ff_dots_pattern <- c(
-      ff_dots_pattern,
+      paste0("(alpha|eps).", rxn_isotopes$isotope) %>% setNames(rxn_isotopes$isotope),
       paste0("(alpha|eps).", rxn_isotopes$isotope, ".(rev|eq)") %>% setNames(paste0(rxn_isotopes$isotope, ".rev")))
   }
 
@@ -98,10 +103,32 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
          ff_dots_missing %>% paste(collapse = ", "), call. = FALSE)
   }
 
-  # construct flux calls
+  # stop if equilibrum ff given but equilibrium_ratio not provided
+  if (any(grepl("eq", ff_dots_names)) && (missing(eq_ratio) || !eq_ratio %in% c("P/S", "S/P"))) {
+    stop("equilibrium fractionation factor(s) provided but unclear whether defined as product/substrate or substrate/product. Please specify parameter eq_ratio='P/S' or eq_ratio='S/P'.", call. = FALSE)
+  } else if (!any(grepl("eq", ff_dots_names)) && !missing(eq_ratio)) {
+    warning("The parameter `eq_ratio` was defined but no equilibrium fractionation factor(s) provided. Did you specify `eq_ratio` by accident or did you mean to supply .eq frationation factors but did not?", call. = F)
+  }
+
+  # determine type for the reaction
   if (missing(reversibility)) {
+    if (all(grepl("eq", ff_dots_names))) type <- "EQ" # equilibrium
+    else if (!any(grepl("eq", ff_dots_names))) type <- "IR" # irreverisble
+    else stop("ambiguous reaction type (irreversible vs. equilibrium), mixed kinetic and equilibrium fractionation factors: ",
+              ff_dots_names %>% paste(collapse = ", "), call. = F)
+  } else
+    type <- "RV" # reversible
+
+  # construct flux calls
+  if (type == "IR") {
+    # irreversible
     mass_flux <- lazy(flux)
-  } else {
+  } else if (type == "EQ") {
+    # equilibrium
+    mass_flux <- interp(lazy(flux(flux_, rev = 1, dir = "+")), flux_ = substitute(flux))
+    mass_flux_rev <- interp(lazy(flux(flux_, rev = 1, dir = "-")), flux_ = substitute(flux))
+  } else if (type == "RV") {
+    # reversible reaction
     mass_flux <-
       interp(lazy(flux(flux_, rev = rev_, dir = "+")),
              flux_ = substitute(flux), rev_ = substitute(reversibility))
@@ -110,14 +137,15 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
              flux_ = substitute(flux), rev_ = substitute(reversibility))
   }
 
-  # construct bare flux isotope calls
-  if (permil) {
-    frac_alpha <- interp(lazy(fractionate(d_, a = ff_)))
-    frac_eps <- interp(lazy(fractionate(d_, eps = ff_)))
-  } else {
-    frac_alpha <- interp(lazy(fractionate(d_, a = ff_, p = FALSE)))
-    frac_eps <- interp(lazy(fractionate(d_, eps = ff_, p = FALSE)))
-  }
+  # construct bare flux isotope calls (simplify by only including parameters when
+  # they do not equate to the default of the fractionate function)
+  permil_text <- if(!permil) ", p = FALSE" else ""
+  multi_text <- if(type == "EQ" && eq_ratio == "P/S") ", m = TRUE" else ""
+  alpha_text <- sprintf("fractionate(d_, a = ff_%s%s)", permil_text, multi_text)
+  eps_text <- sprintf("fractionate(d_, eps = ff_%s%s)", permil_text, multi_text)
+  frac_alpha <- interp(lazy(x), x = parse(text = alpha_text, keep.source = F, n = NULL)[[1]])
+  frac_eps <- interp(lazy(x), x = parse(text = eps_text, keep.source = F, n = NULL)[[1]])
+
   flux_isotope <- list()
   flux_isotope_rev <- list()
 
@@ -134,8 +162,13 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
     flux_isotope[[paste0("flux.", iso)]] <-
       interp(func,d_ = as.name(paste0(reactant, ".", iso)), ff_ = ff_fwd)
 
-    # reversible?
-    if (!missing(reversibility)) {
+    if (type == "EQ") {
+      # in equilibrium scenario, the reverse flux is not fractionated (all
+      # fractionation occurs on the forward flux)
+      flux_isotope_rev[[paste0("flux.", iso)]] <-
+        interp(lazy(d_), d_ = as.name(paste0(product, ".", iso)))
+    } else if (type == "RV") {
+      # reversible (more complex retrun flux)
       iso_rev <- paste0(iso, ".rev")
       prefix_rev <- gsub(ff_dots_pattern[iso_rev], "\\1", ff_dots_names[iso_rev])
 
@@ -158,7 +191,10 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
 
         # overall
         func <- frac_alpha
-        ff <- interp(lazy(fwd/eq), fwd = ff_fwd_alpha, eq = ff_eq_alpha)
+        if (eq_ratio == "S/P")
+          ff <- interp(lazy(fwd/eq), fwd = ff_fwd_alpha, eq = ff_eq_alpha)
+        else
+          ff <- interp(lazy(fwd*eq), fwd = ff_fwd_alpha, eq = ff_eq_alpha)
       } else stop("should never happen")
 
       # add to flux list
@@ -170,10 +206,10 @@ add_simple_reaction <- function(ip, eq, name = default_rxn_name(ip), reversibili
 
   # add forward reaction
   ip <- add_reaction_(
-    ip, eq, name = if(!missing(reversibility)) paste(name,"(forward)") else name,
+    ip, eq, name = if(type != "IR") paste(name,"(forward)") else name,
     flux = mass_flux, isotopes = flux_isotope, class = "simple", abscissa = abscissa)
 
-  if (!missing(reversibility)) {
+  if (type != "IR") {
     ip <- add_reaction_(
       ip, eq, name = paste(name,"(reverse)"),
       flux = mass_flux_rev, isotopes = flux_isotope_rev, class = "simple", abscissa = abscissa)
@@ -196,13 +232,13 @@ default_rxn_name <- function(ip) {
 #' @param args additional arguments (usually expressions)
 #' @export
 #' @note standard evaluation
-add_reaction_ <- function(ip, eq, name, flux, isotopes = list(),
+add_reaction_ <- function(ip, equation, name, flux, isotopes = list(),
                           abscissa = NULL, class = "generic", args = list()) {
 
   if (!is(ip, "isopath")) stop ("reaction can only be added to an isopath", call. = FALSE)
 
   # default abscissa
-  components <- parse_reaction_equation(eq)
+  components <- parse_reaction_equation(equation)
   if (is.null(abscissa))
     abscissa <- default_abscissa(ip, components)
 

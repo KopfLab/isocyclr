@@ -20,16 +20,16 @@ fractionate(delta, alpha = NULL, epsilon = NULL, permil = TRUE,
 
 \item{multiply}{Whether to multiply the delta-derived ratio by the fractionation factor or divide it.
 Divide is \code{multiply=FALSE} (the default), which is the correct behavior for kinetic fractionation
-factors defined as k_light/k_heavy and equilibrium fractionation factors defined as reactant/product.
+factors defined as k_light/k_heavy and equilibrium fractionation factors defined as substrate/product.
 Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionation
-factors defined as k_heavy/k_light and equilibrium fractionation factors defined as product/reactant.}
+factors defined as k_heavy/k_light and equilibrium fractionation factors defined as product/substrate.}
 }
 \value{
 The resulting delta value (in permil notation if \code{permil = TRUE})
 }
 \description{
 Convenience function to fractionate a delta value using a fractionation factor
-in alpha or epsilon notation. This function does not approximate calculate accurate
+in alpha or epsilon notation. This function does not approximate but calculates accurate
 fractionation.
 }
 \note{

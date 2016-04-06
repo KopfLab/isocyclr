@@ -4,13 +4,11 @@
 \alias{add_custom_reaction}
 \title{Add a custom reaction}
 \usage{
-add_custom_reaction(ip, eq, name = default_rxn_name(ip), flux = NULL, ...,
-  abscissa = NULL)
+add_custom_reaction(ip, equation, name = default_rxn_name(ip), flux = NULL,
+  ..., abscissa = NULL)
 }
 \arguments{
 \item{ip}{An \link{isopath} object to which this reaction should be added.}
-
-\item{eq}{Valid equation in chemical format a * A + b * B + ... == x * X + y * Y + ... Note that all components must already be part of the \link{isopath} (add components using \link{add_component}).}
 
 \item{name}{Name of the reaction. Must be unique (i.e. will overwrite an existing reaction of the same name). If omitted (the default), will name the reaction based on the existing number of reactions in the \link{isopath}, e.g. "rxn4".}
 
@@ -19,6 +17,8 @@ add_custom_reaction(ip, eq, name = default_rxn_name(ip), flux = NULL, ...,
 \item{...}{isotopic composition of the flux transferred in the reaction - can be a number or expression (referencing variables and parameters in the system), naming convention: flux.[<component>.]<isotope> = ... (component can be omitted if the isotopic composition of the flux is the same for each pool)}
 
 \item{abscissa}{The reaction loaction. This is used purely for graphical representation (see \link{generate_reaction_diagram}). By default, a decent value will be guessed from the existing reactions in the \link{isopath}. This works fairly well as long as all reactions after the first one are added to the isopath in an order such that at least one reactant or product is already part of a different reaction in the pathway.}
+
+\item{eq}{Valid equation in chemical format a * A + b * B + ... == x * X + y * Y + ... Note that all components must already be part of the \link{isopath} (add components using \link{add_component}).}
 }
 \value{
 The \link{isopath} object with the new reaction added.
