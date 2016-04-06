@@ -27,7 +27,7 @@ check_model <- function(ip) {
 
   # error handling
   error = function(e) {
-    stop("encountered the following error during pre-check of the model run: >>> ", e$message, " <<< Please make sure that all referenced columns are defined in the parameter set and that scenarios are unique. Currently available to the system are: ", names(ip$parameters) %>% paste(collapse = ", "), call. = FALSE)
+    stop("encountered the following error during pre-check of the model run: <<< ", e$message, " >>>. If this is a missing object error, please make sure that all referenced columns are defined in the parameter set and that scenarios are unique. Currently available to the system are: ", names(ip$parameters) %>% paste(collapse = ", "), call. = FALSE)
   })
 
   return(invisible(ip))

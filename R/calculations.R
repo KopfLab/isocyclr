@@ -33,7 +33,7 @@ flux <- function(net, reversibility, direction, model_offset = 1e-9){
     else if (direction == "-") dir_flux <- net / (1 - reversibility) * reversibility
   }
 
-  if (any(dir_flux < 0)) {
+  if (any(dir_flux < 0, na.rm = TRUE)) {
     stop("negative directional flux does not make sense")
   }
 
@@ -71,6 +71,11 @@ fractionate <- function(delta, alpha = NULL, epsilon = NULL, permil = TRUE, mult
          .call = FALSE)
   else if (!is.null(epsilon))
     alpha <- epsilon/multiplier + 1
+
+  if (any(alpha <= 0) || any(alpha > 2))
+    stop("unrealistically high (>2) or impossibly low (<0) fractionation factors. ",
+         "Make sure to indicate properly whether parameters to fractionate are alpha or eps: alpha = ",
+         alpha %>% signif(3) %>% paste(collapse = ", "), call. = FALSE)
 
   # multiplication is computationally faster so switching to this
   alpha <- if (!multiply) 1/alpha else alpha
