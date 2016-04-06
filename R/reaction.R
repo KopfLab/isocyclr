@@ -19,9 +19,9 @@ add_custom_reaction <- function(ip, equation, name = default_rxn_name(ip), flux 
                 isotopes = lazy_dots(...), class = "custom", abscissa = abscissa)
 }
 
-#' Add a simple single fractionation reaction
+#' Add a standard single fractionation reaction
 #'
-#' This adds a simple 1 to 1 (one reactant, one product) reaction with standard
+#' This adds a standard 1 to 1 (one reactant, one product) reaction with standard
 #' fractionation factors to the isopath (for all isotopes that are part of both
 #' reactant AND product). Supports reversibility for easy implementation of bi-
 #' directional fluxes. This is really intended as a convenience function to make
@@ -37,8 +37,8 @@ add_custom_reaction <- function(ip, equation, name = default_rxn_name(ip), flux 
 #' @export
 #' @inheritParams add_custom_reaction
 #' @family reaction functions
-add_simple_reaction <- function(ip, equation, name = default_rxn_name(ip), reversibility, ...,
-                                flux = NULL, permil = TRUE, eq_ratio = c("P/S", "S/P"), abscissa = NULL){
+add_standard_reaction <- function(ip, equation, name = default_rxn_name(ip), flux = NULL, reversibility, ...,
+                                permil = TRUE, eq_ratio = c("P/S", "S/P"), abscissa = NULL){
 
   # equation
   eq <- deparse(substitute(equation))
@@ -52,7 +52,7 @@ add_simple_reaction <- function(ip, equation, name = default_rxn_name(ip), rever
   # make sure it's a 1 to 1 reaction
   rxn_stoic <- components %>% summarize(n_reactant = sum(comp_stoic < 0), n_product = sum(comp_stoic > 0))
   if (rxn_stoic$n_reactant != 1 || rxn_stoic$n_product != 1) {
-    stop("simple reactions can only be 1 to 1 transformations: ", eq,
+    stop("standard reactions can only be 1 to 1 transformations: ", eq,
          " (reactants: ", rxn_stoic$n_reactant, ", products: ", rxn_stoic$n_product, ")", call. = FALSE)
   }
 
@@ -207,12 +207,12 @@ add_simple_reaction <- function(ip, equation, name = default_rxn_name(ip), rever
   # add forward reaction
   ip <- add_reaction_(
     ip, eq, name = if(type != "IR") paste(name,"(forward)") else name,
-    flux = mass_flux, isotopes = flux_isotope, class = "simple", abscissa = abscissa)
+    flux = mass_flux, isotopes = flux_isotope, class = "standard", abscissa = abscissa)
 
   if (type != "IR") {
     ip <- add_reaction_(
       ip, eq, name = paste(name,"(reverse)"),
-      flux = mass_flux_rev, isotopes = flux_isotope_rev, class = "simple", abscissa = abscissa)
+      flux = mass_flux_rev, isotopes = flux_isotope_rev, class = "standard", abscissa = abscissa)
   }
 
   return(invisible(ip))

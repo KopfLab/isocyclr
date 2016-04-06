@@ -33,6 +33,6 @@ Under the hood, this uses the standard evaluation function \link{add_reaction_},
 isopath() \%>\% add_component(c("A", "B")) \%>\% add_custom_reaction(A == 3 * B)
 }
 \seealso{
-Other reaction functions: \code{\link{add_simple_reaction}}
+Other reaction functions: \code{\link{add_standard_reaction}}
 }
 

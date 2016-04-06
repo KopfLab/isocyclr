@@ -123,4 +123,3 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
 
   result %>% select_(.dots = c("time", names(ip$parameters))) %>% return()
 }
-
