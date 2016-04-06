@@ -94,7 +94,7 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
   }
 
   # info
-  if (!quiet) message(sprintf("Running model for %d scenarios...", nrow(ip$parameters)))
+  if (!quiet) message(sprintf("Running model for %d scenario(s)...", nrow(ip$parameters)))
 
   # run each scenario by grouping by each row
   result <-

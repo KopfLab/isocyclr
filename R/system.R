@@ -12,6 +12,7 @@ isopath <- function() {
 }
 
 #' get the reaction matrix for an isopath
+#'
 #' @param evaluate if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)
 #' @param parameters data to use for evaluating expressions
 #' @family system information
@@ -30,6 +31,9 @@ get_reaction_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameter
 }
 
 #' get the combined reaction_component_matrix
+#'
+#' if \code{evaluate = TRUE}, excludes components that are not variable
+#'
 #' @inheritParams get_reaction_matrix
 #' @family system information
 #' @note TODO: write tests and replace get_reaction_component_matrix
@@ -58,12 +62,18 @@ get_reaction_component_matrix2 <- function(ip, evaluate = FALSE, parameters = ip
   }
 
   # construct data frame
-  left_join(
+  df <- left_join(
     rxn %>% gather(component, comp_stoic, -reaction, -abscissa, -flux),
     cps %>% select(component, variable),
     by = "component") %>%
     # remove listings that don't have the component
-    filter(!is.na(comp_stoic)) %>%
+    filter(!is.na(comp_stoic))
+
+  # exclude invariable components if evaluating
+  if (evaluate)
+    df <- df %>% filter(variable)
+
+  df %>%
     # get pool size and dx/dt
     mutate(
       pool_size = mapply(get_size, component),
@@ -77,6 +87,9 @@ get_reaction_component_matrix2 <- function(ip, evaluate = FALSE, parameters = ip
 }
 
 #' get the combined reaction_isotope_matrix
+#'
+#' if \code{evaluate = TRUE}, excludes components that are not variable
+#'
 #' @inheritParams get_reaction_matrix
 #' @family system information
 #' @note TODO: write tests and replace all the get_flux... functions!!
@@ -129,13 +142,19 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
   }
 
   # construct data frame
-  left_join(
+  df <- left_join(
     rxn %>% gather(component, comp_stoic, -reaction, -abscissa, -flux),
     cps %>% gather(isotope, iso_stoic, -component, -variable),
     by = "component"
   ) %>%
     # remove listings that don't have component or isotope
-    filter(!is.na(comp_stoic), !is.na(iso_stoic)) %>%
+    filter(!is.na(comp_stoic), !is.na(iso_stoic))
+
+  # exclude invariable components if evaluating
+  if (evaluate)
+    df <- df %>% filter(variable)
+
+  df %>%
     # flux and pool isotopic composition, plus dx/dt
     mutate(
       pool_size = mapply(get_size, component),

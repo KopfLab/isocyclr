@@ -43,7 +43,7 @@ test_that("Running model works", {
   sys <- sys %>%
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
     set_parameters(Y.dC = 5)
-  expect_message(sys %>% run_model(2), "Running model for 2 scenarios")
+  expect_message(sys %>% run_model(2), "Running model for 2 scenario(s)*")
   expect_message(sys %>% set_parameters(dm = 0.5) %>% run_model(2), "encountered the following error .* depleted .* pools")
   expect_equal(
     sys %>% set_parameters(dm = c(0.2, 0.4))  %>%  run_model(2) %>% signif(3),
