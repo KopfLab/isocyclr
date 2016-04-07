@@ -4,18 +4,16 @@
 \alias{run_model}
 \title{Run the reaction model}
 \usage{
-run_model(ip, time_steps, ..., quiet = FALSE)
+run_model(ip, time_steps, ..., make_state_var = c())
 }
 \arguments{
 \item{time_steps}{the number of time steps, can be a number or expression (referring to a parameter in the isopath)}
 
 \item{...}{additional parameters passed on to the \link{ode} solver}
+
+\item{make_state_var}{vector of parameters that should be included as state variables (so they can be changed as part of any special events passed to \code{...}, see \link{ode} for detail on the \code{events} parameter). All variable components' pools and isotopic compositions are always inclduded as state parameters and don't need to be added explicitly here.}
 }
 \description{
 Run it for a certain number of time steps.
-}
-\details{
-This will purposefully include the entire parameter set in the state variables to allow for events to change
-any parameter at specific time points or in response to functional values
 }
 

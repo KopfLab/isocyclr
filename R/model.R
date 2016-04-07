@@ -33,39 +33,25 @@ check_model <- function(ip) {
   return(invisible(ip))
 }
 
-
-#' Run the reaction model
-#'
-#' Run it for a certain number of time steps.
-#'
-#' This will purposefully include the entire parameter set in the state variables to allow for events to change
-#' any parameter at specific time points or in response to functional values
-#'
-#' @param time_steps the number of time steps, can be a number or expression (referring to a parameter in the isopath)
-#' @param ... additional parameters passed on to the \link{ode} solver
-#' @param make_state_var vector of parameters that should be included as state variables (so they can be changed as part of any special events passed to \code{...}, see \link{ode} for detail on the \code{events} parameter). All variable components' pools and isotopic compositions are always inclduded as state parameters and don't need to be added explicitly here.
-run_model <- function(ip, time_steps, ..., quiet = FALSE, make_state_var = c()) {
-  if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
-
-  # model ready checks
-  if (missing(time_steps))
-    stop("time_steps is required when calling 'run_model' (either a number or an expression referencing a parameter)")
-  check_model(ip)
-
-  # steps evaluation
-  steps_exp <- lazy(time_steps)
-
-  # construct lazy expression for optimized derivative calculation
+#' compile the ODE expression for the isopath
+get_ode_expression <- function(ip) {
   exp_text <- paste0("list(",
-                    (ip %>% get_ode_matrix() %>% mutate(exp = paste(x, "=", `dx/dt`)))$exp %>%
-                      paste(collapse = ", "), ")")
-  exp_lazy <- interp(lazy(x), x = parse(text = exp_text, keep.source = F, n = NULL)[[1]])
+                     (ip %>% get_ode_matrix() %>% mutate(exp = paste(x, "=", `dx/dt`)))$exp %>%
+                       paste(collapse = ", "), ")")
+  interp(lazy(x), x = parse(text = exp_text, keep.source = F, n = NULL)[[1]])
+}
+
+#' get ode derivative
+get_ode_function <- function(ip) {
+
+  # lazy expression for optimized derivative calculation
+  exp_lazy <- ip %>% get_ode_expression()
 
   # vector of variable component pools
   pools <- (ip %>% get_component_matrix()  %>% filter(variable == T))$component
 
   # derivatives function
-  calc_derivs <- function(t, y, p) {
+  function(t, y, p) {
 
     # current ODE state
     ode_state <- c(as.list(y), p)
@@ -86,16 +72,39 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE, make_state_var = c()) 
     }
 
     # all dx/dt, default value 0 for all non modified variables (=parameters)
-    dx <- modifyList(
-      setNames(as.list(rep(0, length(y))), names(y)),
-      dx_var)
+    dx <- modifyList(setNames(as.list(rep(0, length(y))), names(y)), dx_var)
 
     # convert to correct list format
     return(list(unlist(dx)))
   }
+}
+
+
+
+
+#' Run the reaction model
+#'
+#' Run it for a certain number of time steps.
+#'
+#' @param time_steps the number of time steps, can be a number or expression (referring to a parameter in the isopath)
+#' @param ... additional parameters passed on to the \link{ode} solver
+#' @param make_state_var vector of parameters that should be included as state variables (so they can be changed as part of any special events passed to \code{...}, see \link{ode} for detail on the \code{events} parameter). All variable components' pools and isotopic compositions are always inclduded as state parameters and don't need to be added explicitly here.
+run_model <- function(ip, time_steps, ..., make_state_var = c()) {
+  if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
+
+  # model ready checks
+  if (missing(time_steps))
+    stop("time_steps is required when calling 'run_model' (either a number or an expression referencing a parameter)")
+  check_model(ip)
 
   # info
-  if (!quiet) message(sprintf("Running model for %d scenario(s)...", nrow(ip$parameters)))
+  message(sprintf("Running model for %d scenario(s)...", nrow(ip$parameters)))
+
+  # derivatives function
+  func <- get_ode_function(ip)
+
+  # steps evaluation
+  steps_exp <- lazy(time_steps)
 
   # state variables
   state_vars <- c(get_ode_matrix(ip)$x, make_state_var) %>% unique()
@@ -112,11 +121,11 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE, make_state_var = c()) 
       # attempt to solve ODE
       sln <- data_frame()
       tryCatch({
-        sln <- ode(y = unlist(.[state_vars]), times = times, func = calc_derivs,
+        sln <- ode(y = unlist(.[state_vars]), times = times, func = func,
                    parms = as.list(.[constants]), ...)
       },
       error = function(e) {
-        message("WARNING: encountered the following error while trying to solve one reaction system (skipping to the next set of parameters): ", e$message)
+        message("WARNING: encountered the following error while trying to solve one parameter set (skipping to the next set of parameters): ", e$message)
       })
 
       # output
@@ -127,5 +136,71 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE, make_state_var = c()) 
 
   if (nrow(result) == 0) stop("None of the scenarios could be computed successfully", call. = FALSE)
 
-  result %>% select_(.dots = c("time", names(ip$parameters))) %>% return()
+  result %>% select_(.dots = c("time",c(state_vars, constants))) %>% return()
 }
+
+#' Run model to steady state
+#'
+#' Reports the number of time steps required to reach steady-state (time = steps * dt) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
+#'
+#' @param ... additional parameters passed on to the steady state ODE (\link{runsteady}) solver, use \link{runsteady} parameter \code{verbose = TRUE} for additional output during computations, use parameters \code{rtol}, \code{atol} and \code{ctol} to adjust steady-state tolerances
+#' @export
+run_steady_state <- function(ip, ...) {
+  if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
+
+  # model ready checks
+  check_model(ip)
+
+  # info
+  message(sprintf("Finding steady-state for %d scenario(s)...", nrow(ip$parameters)))
+
+  # ode function
+  func <- get_ode_function(ip)
+
+  # state variables
+  state_vars <- get_ode_matrix(ip)$x
+  state_vars_t0 <- paste0(state_vars, "_t0")
+  constants <- setdiff(names(ip$parameters), state_vars)
+
+  # run each scenario by grouping by each row
+  result <-
+    ip$parameters %>%
+    group_by_(.dots = names(ip$parameters)) %>%
+    do({
+      # store t0 values for all state variables
+      sln <- rename_(., .dots = setNames(state_vars, state_vars_t0))[state_vars_t0]
+      # attempt to solve ODE
+      tryCatch({
+        timing <-
+          system.time(
+            out <- runsteady(y = unlist(.[state_vars]), func = func, times = c(0, Inf),
+                         parms = as.list(.[constants]),  ...)
+          )
+
+        if (attributes(out)$steady) {
+          sln <- bind_cols(
+            data_frame(steps = attributes(out)$steps),
+            sln, # t0 values
+            as_data_frame(as.list(out$y)) # solutions
+          )
+        } else {
+          message("WARNING: did not reach steady state (elapsed time: ", signif(timing[['elapsed']], 5), "s) for one parameter set (skipping to the next set of parameters). Run with verbose = TRUE for additional detail.")
+        }
+
+      },
+      error = function(e) {
+        message("WARNING: encountered the following error while trying to find steady state for one reaction system (skipping to the next set of parameters): ", e$message)
+      })
+
+      # output
+      return(sln)
+
+    }) %>%
+    ungroup()
+
+  if (nrow(result) == 0) stop("None of the scenarios reached steady-state.", call. = FALSE)
+
+  result %>% select_(.dots = c("steps", state_vars, state_vars_t0, constants)) %>% return()
+}
+
+

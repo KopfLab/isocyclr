@@ -17,7 +17,8 @@ Imports:
     lazyeval,
     tidyr,
     ggplot2,
-    deSolve
+    deSolve,
+    rootSolve
 Suggests:
     testthat,
     rmarkdown,
