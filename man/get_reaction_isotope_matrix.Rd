@@ -8,7 +8,7 @@ get_reaction_isotope_matrix(ip, evaluate = FALSE,
   parameters = ip$parameters[1, ])
 }
 \description{
-get the combined reaction_isotope_matrix
+if \code{evaluate = TRUE}, excludes components that are not variable
 }
 \note{
 TODO: write tests and replace all the get_flux... functions!!

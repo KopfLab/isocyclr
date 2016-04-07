@@ -8,7 +8,7 @@ get_reaction_component_matrix2(ip, evaluate = FALSE,
   parameters = ip$parameters[1, ])
 }
 \description{
-get the combined reaction_component_matrix
+if \code{evaluate = TRUE}, excludes components that are not variable
 }
 \note{
 TODO: write tests and replace get_reaction_component_matrix

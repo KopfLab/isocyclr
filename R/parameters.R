@@ -4,32 +4,28 @@
 set_parameters <- function(ip, ...) {
   if (!is(ip, "isopath")) stop ("parameters can only be set for an isopath")
 
-  args <- list(...)
-  if (length(args) == 1 && is.data.frame(..1)) params <- ..1
-  else params <- args %>% as_data_frame()
-
-  if (nrow(ip$parameters) > 0) {
-    # attempt to merge (@TODO: could do this with mutate to allow single value additions)
+  ldots <- lazy_dots(...)
+  if (length(list(...)) == 1 && is.data.frame(..1)) {
+    # overwrite if single data frame passed in
+    ip$parameters <- ..1
+  } else if (nrow(ip$parameters) == 0) {
+    # overwrite if nothing set yet
+    ip$parameters <- data_frame(...)
+  } else {
+    # mutate otherwise
     tryCatch({
-      # if one of the sets is single line, allow it to be merged with a multi-line parameter set
-      if (nrow(params) == 1 && nrow(ip$parameters) > 1) {
-        params <- params[rep(1, nrow(ip$parameters)),]
-      } else if (nrow(params) > 1 && nrow(ip$parameters) == 1) {
-        ip$parameters <- ip$parameters[rep(1, nrow(params)),]
-      }
-      ip$parameters <- bind_cols(ip$parameters[!names(ip$parameters) %in%
-                                                 names(params)], params)
-      },
-      error = function(e) {
-        stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'.")
-      })
-  } else
-    ip$parameters <- params
+      ip$parameters <- mutate_(ip$parameters, .dots = ldots)
+    },
+    error = function(e) {
+      stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'.", call. = FALSE)
+    })
+  }
 
   return(invisible(ip))
 }
 
-#' get the parameter data frame
+
+#' @rdname set_parameters
 #' @export
 get_parameters <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only get parameters from an isopath")

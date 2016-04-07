@@ -138,7 +138,8 @@ test_that("Adding parameters works", {
   expect_equal( set_parameters(sys2, X = 100, new = 0.1)$parameters,
                 data_frame(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
   # multi line
-  sys3 <- set_parameters(sys2, X = 100, new = 0.1)
+  sys3 <- set_parameters(sys2, sys2$parameters[c(1,1),]) %>%
+    set_parameters(X = 100, new = 0.1)
   expect_equal(
     set_parameters(sys3, Z = c(1,2))$parameters,
     data_frame(X = c(100, 100), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4),
