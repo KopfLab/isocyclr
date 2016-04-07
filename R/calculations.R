@@ -11,6 +11,7 @@
 #' at steady-state but not during a model. The \code{model_offset} parameter offsets
 #' completely reversible reactions from 1 by this small number to make the reaction
 #' computationally feasible.
+#' @export
 #' @note This function uses standard evaluation.
 flux <- function(net, reversibility, direction, model_offset = 1e-9){
 
@@ -58,6 +59,7 @@ flux <- function(net, reversibility, direction, model_offset = 1e-9){
 #' Multiply is \code{multiply=TRUE}, which is the correct behavior for kinetic fractionation
 #' factors defined as k_heavy/k_light and equilibrium fractionation factors defined as product/substrate.
 #' @note This function uses standard evaluation.
+#' @export
 #' @return The resulting delta value (in permil notation if \code{permil = TRUE})
 fractionate <- function(delta, alpha = NULL, epsilon = NULL, permil = TRUE, multiply = FALSE) {
 

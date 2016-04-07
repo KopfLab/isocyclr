@@ -3,7 +3,7 @@
 #' @description This package facilitates the modeling of isotopic effects through biogeochemical pathways and cycles including non-steady state and steady-state solutions.
 #' @author Sebastian Kopf
 #' @docType package
-#' @import dplyr lazyeval deSolve ggplot2
+#' @import dplyr lazyeval deSolve rootSolve ggplot2
 #' @importFrom tidyr gather gather_ extract extract_ spread spread_
 NULL
 

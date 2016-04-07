@@ -10,6 +10,6 @@ run_steady_state(ip, ...)
 \item{...}{additional parameters passed on to the steady state ODE (\link{runsteady}) solver, use \link{runsteady} parameter \code{verbose = TRUE} for additional output during computations, use parameters \code{rtol}, \code{atol} and \code{ctol} to adjust steady-state tolerances}
 }
 \description{
-Reports the number of time steps required to reach steady-state (time = steps * dt) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
+Reports the time required to reach steady-state (in model time, with dt=1) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
 }
 

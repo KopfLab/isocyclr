@@ -2,6 +2,8 @@
 check_model <- function(ip) {
   if (!is(ip, "isopath")) stop ("can only check model ready for an isopath", call. = FALSE)
 
+  message(sprintf("Checking model for %d scenario(s)...", nrow(ip$parameters)))
+
   tryCatch({
 
     # parameters
@@ -89,6 +91,7 @@ get_ode_function <- function(ip) {
 #' @param time_steps the number of time steps, can be a number or expression (referring to a parameter in the isopath)
 #' @param ... additional parameters passed on to the \link{ode} solver
 #' @param make_state_var vector of parameters that should be included as state variables (so they can be changed as part of any special events passed to \code{...}, see \link{ode} for detail on the \code{events} parameter). All variable components' pools and isotopic compositions are always inclduded as state parameters and don't need to be added explicitly here.
+#' @export
 run_model <- function(ip, time_steps, ..., make_state_var = c()) {
   if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
 
@@ -141,7 +144,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
 
 #' Run model to steady state
 #'
-#' Reports the number of time steps required to reach steady-state (time = steps * dt) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
+#' Reports the time required to reach steady-state (in model time, with dt=1) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
 #'
 #' @param ... additional parameters passed on to the steady state ODE (\link{runsteady}) solver, use \link{runsteady} parameter \code{verbose = TRUE} for additional output during computations, use parameters \code{rtol}, \code{atol} and \code{ctol} to adjust steady-state tolerances
 #' @export
@@ -179,7 +182,7 @@ run_steady_state <- function(ip, ...) {
 
         if (attributes(out)$steady) {
           sln <- bind_cols(
-            data_frame(steps = attributes(out)$steps),
+            data_frame(time = attributes(out)$time),
             sln, # t0 values
             as_data_frame(as.list(out$y)) # solutions
           )
@@ -200,7 +203,7 @@ run_steady_state <- function(ip, ...) {
 
   if (nrow(result) == 0) stop("None of the scenarios reached steady-state.", call. = FALSE)
 
-  result %>% select_(.dots = c("steps", state_vars, state_vars_t0, constants)) %>% return()
+  result %>% select_(.dots = c("time", state_vars, state_vars_t0, constants)) %>% return()
 }
 
 
