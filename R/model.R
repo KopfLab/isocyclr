@@ -43,7 +43,8 @@ check_model <- function(ip) {
 #'
 #' @param time_steps the number of time steps, can be a number or expression (referring to a parameter in the isopath)
 #' @param ... additional parameters passed on to the \link{ode} solver
-run_model <- function(ip, time_steps, ..., quiet = FALSE) {
+#' @param make_state_var vector of parameters that should be included as state variables (so they can be changed as part of any special events passed to \code{...}, see \link{ode} for detail on the \code{events} parameter). All variable components' pools and isotopic compositions are always inclduded as state parameters and don't need to be added explicitly here.
+run_model <- function(ip, time_steps, ..., quiet = FALSE, make_state_var = c()) {
   if (!is(ip, "isopath")) stop ("can only run model for an isopath", call. = FALSE)
 
   # model ready checks
@@ -67,7 +68,7 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
   calc_derivs <- function(t, y, p) {
 
     # current ODE state
-    ode_state <- as.list(y)
+    ode_state <- c(as.list(y), p)
 
     # evaluate the expression for the variable dx/dt
     dx_var <- lazy_eval(exp_lazy, data = ode_state)
@@ -86,7 +87,7 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
 
     # all dx/dt, default value 0 for all non modified variables (=parameters)
     dx <- modifyList(
-      setNames(as.list(rep(0, length(ode_state))), names(ode_state)),
+      setNames(as.list(rep(0, length(y))), names(y)),
       dx_var)
 
     # convert to correct list format
@@ -95,6 +96,10 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
 
   # info
   if (!quiet) message(sprintf("Running model for %d scenario(s)...", nrow(ip$parameters)))
+
+  # state variables
+  state_vars <- c(get_ode_matrix(ip)$x, make_state_var) %>% unique()
+  constants <- setdiff(names(ip$parameters), state_vars)
 
   # run each scenario by grouping by each row
   result <-
@@ -107,7 +112,8 @@ run_model <- function(ip, time_steps, ..., quiet = FALSE) {
       # attempt to solve ODE
       sln <- data_frame()
       tryCatch({
-        sln <- ode(y = unlist(.), times = times, func = calc_derivs, ...)
+        sln <- ode(y = unlist(.[state_vars]), times = times, func = calc_derivs,
+                   parms = as.list(.[constants]), ...)
       },
       error = function(e) {
         message("WARNING: encountered the following error while trying to solve one reaction system (skipping to the next set of parameters): ", e$message)
