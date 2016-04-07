@@ -312,7 +312,8 @@ default_abscissa <- function(ip, new_components) {
     distinct() %>%
     filter(!is.na(new_comp_stoic)) %>%
     filter(abscissa == min(abscissa)) %>%
-    filter(comp_stoic == max(comp_stoic))
+    filter(comp_stoic == max(comp_stoic)) %>%
+    arrange(new_comp_stoic)
 
   # components not found
   if (nrow(rxns) == 0)
