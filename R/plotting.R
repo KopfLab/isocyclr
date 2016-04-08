@@ -35,7 +35,8 @@ generate_reaction_diagram <- function(ip) {
       rxn_components_xy %>% filter(comp_stoic < 0) %>% rename(xend = x, yend = y),
       by = c("reaction", "isotope")
     ) %>%
-    group_by(xstart, ystart, xend, yend) %>% arrange(reaction) %>%
+    group_by(isotope, xstart, ystart, xend, yend) %>%
+    arrange(reaction) %>%
     # offset in y direction depending on multi-line reactions
     mutate(y_offset = 0.05 * seq(-n()+1, n()-1, length.out = n())) %>%
     ungroup() %>%
