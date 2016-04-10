@@ -59,3 +59,26 @@ test_that("Running model works", {
       Y.N = c(1, -1, -2, 1, -2, -3)))
 
 })
+
+
+test_that("Running steady-state works", {
+  # @TODO
+  sys <- isopath() %>%
+    add_isotope("C") %>% add_isotope("N") %>%
+    add_component("X", C, N) %>% add_component("Y", C, N) %>%
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
+    set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1, X.dC = 0)
+
+  expect_error(run_steady_state(NULL), "can only run model for an isopath")
+  expect_error(run_steady_state(sys), "encountered the following error during pre-check .* object 'X' not found")
+  expect_error( sys %>% set_parameters(transform(sys$parameters, X = c(1, 1))) %>% run_steady_state(),
+                "encountered the following error during pre-check .* there seem to be multiple identical run scenarios")
+  expect_error(run_steady_state(sys), "encountered the following error during pre-check .* object .* not found")
+  sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10, X = 1)
+  expect_message(tryCatch(sys %>% set_parameters(dm = -1) %>% run_steady_state(), error = function(e){}), "depleted .* pool")
+  expect_error(capture.output(sys %>% set_parameters(dm = -1) %>% run_steady_state()),
+               "None of the scenarios could be run to steady-state")
+  expect_message(tryCatch(sys %>% add_component("X", variable = F, C, N) %>%
+                            set_parameters(dm = 1e6) %>% run_steady_state(), error = function(e){}), "overflowing pool")
+
+})

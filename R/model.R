@@ -18,9 +18,12 @@ check_model <- function(ip) {
       do({
         # safety checks - will through errors if needed
         if (nrow(.) != 1) stop("there seem to be multiple identical run scenarios, please make sure each set of parameters is unique", call. = FALSE)
-        dx_var <- get_ode_matrix(ip, eval = T, param = .)$`dx/dt`
-        if (any(is.na(dx_var))) {
-          stop("some derivatives could not be computed: ", dx_var[is.na(dx_var)] %>% names() %>% paste(collapse = ", "), call. = FALSE)
+        dx_var <- get_ode_matrix(ip, eval = T, param = .)
+        if (any(is.na(dx_var$`dx/dt`))) {
+          dx_text <- get_ode_matrix(ip, eval = F)$`dx/dt`
+          stop("some derivatives could not be computed, check the expressions: ",
+               paste(dx_var$x[is.na(dx_var$`dx/dt`)], "=", dx_text[is.na(dx_var$`dx/dt`)]) %>%
+                 paste(collapse = ", "), call. = FALSE)
         }
         data_frame()
       })
@@ -61,16 +64,25 @@ get_ode_function <- function(ip) {
     # evaluate the expression for the variable dx/dt
     dx_var <- lazy_eval(exp_lazy, data = ode_state)
 
-    # check if there are any missing values
-    if ( any(sapply(dx_var, length) == 0) )
+    # check if there are any missing values other computational problems
+    if ( any(sapply(dx_var, length) == 0) || any(is.nan(unlist(dx_var))) )
       stop("some derivatives could not be computed: ",
-           dx_var[sapply(dx_var, length) == 0] %>% names() %>% paste(collapse = ", "), call. = FALSE)
+           dx_var[sapply(dx_var, length) == 0 | is.nan(unlist(dx_var))] %>% names() %>% paste(collapse = ", "),
+           " (state variables: ", paste(names(y), "=", y) %>% paste(collapse = ", "), ")",
+           call. = FALSE)
 
-    # make sure not running out of any component (with simple loop for speed)
+    # make sure not running out of any component or running into infinity problems (with simple loop for speed)
     for (pool in pools){
-      if (ode_state[[pool]] + dx_var[[pool]] < 0)
+      if (ode_state[[pool]] > 1e100)
+        stop("overflowing pool: ", pool, " (size: ", ode_state[[pool]], " | dx/dt: ", signif(dx_var[[pool]],3), ")",
+             ". Check your system to make sure that none of the component pools overflows (reaches a size of 10^100). ",
+             "State variables: ", paste(names(y), "=", y) %>% paste(collapse = ", "),
+             call. = FALSE)
+      else if (ode_state[[pool]] + dx_var[[pool]] < 0)
         stop("depleted the following pool: ", pool, " (size: ", ode_state[[pool]], " | dx/dt: ", signif(dx_var[[pool]],3), ")",
-             ". Please make sure that none of the component pools runs out completely.", call. = FALSE)
+             ". Please make sure that none of the component pools runs out completely. ",
+             "State variables: ", paste(names(y), "=", y) %>% paste(collapse = ", "),
+             call. = FALSE)
     }
 
     # all dx/dt, default value 0 for all non modified variables (=parameters)
@@ -128,7 +140,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
                    parms = as.list(.[constants]), ...)
       },
       error = function(e) {
-        message("WARNING: encountered the following error while trying to solve one parameter set (skipping to the next set of parameters): ", e$message)
+        message("WARNING: encountered the following error while trying to solve one parameter set (skipping to the next set of parameters):\n<<< ", e$message, " >>>.\nParameters: ", paste(names(unlist(.)), "=", unlist(.)) %>% paste(collapse = ", "))
       })
 
       # output
@@ -170,8 +182,7 @@ run_steady_state <- function(ip, ...) {
     ip$parameters %>%
     group_by_(.dots = names(ip$parameters)) %>%
     do({
-      # store t0 values for all state variables
-      sln <- rename_(., .dots = setNames(state_vars, state_vars_t0))[state_vars_t0]
+      sln <- data_frame()
       # attempt to solve ODE
       tryCatch({
         timing <-
@@ -183,16 +194,17 @@ run_steady_state <- function(ip, ...) {
         if (attributes(out)$steady) {
           sln <- bind_cols(
             data_frame(time = attributes(out)$time),
-            sln, # t0 values
+            rename_(., .dots = setNames(state_vars, state_vars_t0))[state_vars_t0], # t0 values
             as_data_frame(as.list(out$y)) # solutions
           )
         } else {
-          message("WARNING: did not reach steady state (elapsed time: ", signif(timing[['elapsed']], 5), "s) for one parameter set (skipping to the next set of parameters). Run with verbose = TRUE for additional detail.")
+          message("WARNING: did not reach steady state (elapsed time: ", signif(timing[['elapsed']], 5), "s) for one parameter set (skipping to the next set of parameters). Run with verbose = TRUE for additional detail.\nParameters: ", paste(names(unlist(.)), "=", unlist(.)) %>% paste(collapse = ", "))
         }
 
       },
       error = function(e) {
-        message("WARNING: encountered the following error while trying to find steady state for one reaction system (skipping to the next set of parameters): ", e$message)
+        message("WARNING: encountered the following error while trying to find steady state for one reaction system (skipping to the next set of parameters):\n<<< ", e$message, " >>>.\nParameters: ",
+                paste(names(unlist(.)), "=", unlist(.)) %>% paste(collapse = ", "))
       })
 
       # output
@@ -201,7 +213,7 @@ run_steady_state <- function(ip, ...) {
     }) %>%
     ungroup()
 
-  if (nrow(result) == 0) stop("None of the scenarios reached steady-state.", call. = FALSE)
+  if (nrow(result) == 0) stop("None of the scenarios could be run to steady-state.", call. = FALSE)
 
   result %>% select_(.dots = c("time", state_vars, state_vars_t0, constants)) %>% return()
 }
