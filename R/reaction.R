@@ -290,6 +290,7 @@ add_reaction_ <- function(ip, equation, name, flux, isotopes = list(),
   return(invisible(ip))
 }
 
+
 #' calculate default abscissa
 #' depending on exising reactions, calculate
 #' where the new reaction should go

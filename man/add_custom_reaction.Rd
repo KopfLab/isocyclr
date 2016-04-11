@@ -29,9 +29,6 @@ Anything's allowed for these, just the flux and the isotopic composition of the 
 \note{
 Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
 }
-\examples{
-isopath() \%>\% add_component(c("A", "B")) \%>\% add_custom_reaction(A == 3 * B)
-}
 \seealso{
 Other reaction functions: \code{\link{add_standard_reaction}}
 }
