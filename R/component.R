@@ -28,7 +28,7 @@ add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
          missing %>% paste(collapse = ", "), call. = FALSE)
 
-  # store info
+  # store info (OBSOLETE, remove when reaction matrix is updated)
   ip <- ip %>% store_info()
 
   return(invisible(ip))

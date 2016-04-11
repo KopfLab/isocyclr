@@ -225,9 +225,13 @@ get_ode_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,])
     select(x, value, `dx/dt`)
 }
 
+#' store info
+#'
 #' store the information about the system in the info list
 #' (this is done for performance reasons to reduce time
 #' intenstive calculations during ode integrations)
+#' @param ip the system
+#' @note deprecated
 store_info <- function(ip) {
   stopifnot(is(ip, "isopath"))
   ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()

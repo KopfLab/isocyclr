@@ -2,15 +2,19 @@
 % Please edit documentation in R/system.R
 \name{store_info}
 \alias{store_info}
-\title{store the information about the system in the info list
-(this is done for performance reasons to reduce time
-intenstive calculations during ode integrations)}
+\title{store info}
 \usage{
 store_info(ip)
+}
+\arguments{
+\item{ip}{the system}
 }
 \description{
 store the information about the system in the info list
 (this is done for performance reasons to reduce time
 intenstive calculations during ode integrations)
+}
+\note{
+deprecated
 }
 
