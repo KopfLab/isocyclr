@@ -168,8 +168,8 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
       `dx/dt` = mapply(get_isotope_change, reaction, component, isotope, comp_stoic, variable)) %>%
     # calculate abscissa for each component
     mutate(abscissa = abscissa - ifelse(comp_stoic < 0, 1, 0 )) %>%
-    # arrange by isotope, then abscissa, rxn, etc.
-    arrange(isotope, abscissa, component, reaction) %>%
+    # arrange
+    arrange(isotope, abscissa, component, desc(comp_stoic)) %>%
     # order columns
     select(isotope, component, abscissa, variable, reaction, comp_stoic,
            flux, flux_isotope, pool_size, pool_isotope, `dx/dt`)
