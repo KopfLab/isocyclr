@@ -19,7 +19,7 @@ library(tidyr)
 
 ## Setup reaction path
 
-```{r, fig.width = 8, fig.height = 5}
+```{r rxn_diagram, fig.width = 8, fig.height = 5}
 path <- isopath() %>% 
   add_isotope("carbon") %>% 
   add_component("AA", carbon, variable = FALSE) %>% 
@@ -67,7 +67,7 @@ model <- path %>% run_model(time_steps = 500)
 
 ## Plot time course
 
-```{r, fig.width = 8, fig.height = 6}
+```{r time_course, fig.width = 8, fig.height = 6}
 model %>% 
   gather(reservoir, delta, ends_with("carbon")) %>%
   ggplot() + aes(time, delta, color = reservoir) +
@@ -80,7 +80,7 @@ model %>%
 
 introduce different starting isotopic composition part way through
 
-```{r, fig.width = 8, fig.height = 6}
+```{r time_course_event, fig.width = 8, fig.height = 6}
 model2 <- path %>% run_model(
   time_steps = 500, make_state_var = c("AA.carbon"),
   events = list(data = data.frame(
@@ -99,7 +99,7 @@ steady <- path %>% run_steady_state(stol = 1e-5, rtol = 1e-3)
 
 No difference between low and high flux once steady-state is reached
 
-```{r, fig.width = 8, fig.height = 6}
+```{r steady_state, fig.width = 8, fig.height = 6}
 path %>% generate_reaction_diagram(
   steady %>% gather(component, y, ends_with("carbon")) %>% 
     mutate(component = sub(".carbon", "", component, fixed = T)) %>% 
@@ -116,7 +116,7 @@ steady2 <- path %>%
   run_steady_state(stol = 1e-5, rtol = 1e-3)
 ```
 
-```{r, fig.width = 8, fig.height = 6}
+```{r steady_state_branching, fig.width = 8, fig.height = 6}
 path %>% generate_reaction_diagram(
   steady2 %>% gather(component, y, ends_with("carbon")) %>% 
     mutate(component = sub(".carbon", "", component, fixed = T)) %>% 
