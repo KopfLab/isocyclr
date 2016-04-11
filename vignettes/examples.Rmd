@@ -9,17 +9,20 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+Load **isocyclr** and other packages used in these examples. Help on all functions is available within R (e.g. via `?add_standard_reaction`).
+
 ```{r, message=FALSE, warning=FALSE}
 library(isocyclr)
 library(ggplot2)
-library(magrittr)
 library(dplyr)
 library(tidyr)
 ```
 
-## Setup reaction path
+## Set up reaction path
 
-```{r rxn_diagram, fig.width = 8, fig.height = 5}
+Set up a reaction network akin to Figure 2 in John Hayes' classic *Fractionation of carbon and hydrogen isotopes in biosynthetic processes. Rev Mineral Geochem 43, 225–277. (2001)*.
+
+```{r}
 path <- isopath() %>% 
   add_isotope("carbon") %>% 
   add_component("AA", carbon, variable = FALSE) %>% 
@@ -36,10 +39,26 @@ path <- isopath() %>%
   add_standard_reaction(F == H, eps.carbon = e7, flux = (1-f3) * (1-f6) * dm) %>% 
   add_standard_reaction(H == I, eps.carbon = e8, flux = (1-f3) * (1-f6) * dm) %>% 
   add_standard_reaction(I == II, eps.carbon = 0, flux = (1-f3) * (1-f6) * dm, name = "I out") 
+```
+
+#### Schematic
+
+```{r rxn_diagram, fig.width = 8, fig.height = 5}
 path %>% generate_reaction_diagram() + coord_equal()
 ```
 
+#### System of differential equations
+
+Look at the system of differential equations generated for the reaction network.
+
+```{r}
+path %>% get_ode_matrix() %>% knitr::kable()
+```
+
+
 ## Assign parameters
+
+The symbols used in reaction network setup can be assigned numeric values (multiple scenarios if needed) that get evaluated upon running the model.
 
 ```{r}
 path <- path %>% 
@@ -61,6 +80,8 @@ path <- path %>%
 
 ## Run model
 
+Running the system of differential equations is easily done and uses the ode solvers of the **deSolve** package.
+
 ```{r}
 model <- path %>% run_model(time_steps = 500)
 ```
@@ -78,7 +99,7 @@ model %>%
 
 ## Run model with event
 
-introduce different starting isotopic composition part way through
+Additional parameters can be passed and will be forwarded to the ode solver, e.g. introducing different starting isotopic composition part way through via a timed event.
 
 ```{r time_course_event, fig.width = 8, fig.height = 6}
 model2 <- path %>% run_model(
@@ -91,13 +112,15 @@ last_plot() %+%
 
 ## Run to steady state
 
+The model can also be run to steady-state using runsteady functionality from the *rootSolve* package. All parameters are forwarded to the ode/root solver.
+
 ```{r}
 steady <- path %>% run_steady_state(stol = 1e-5, rtol = 1e-3)
 ```
 
 #### Steady state isotopic composition
 
-No difference between low and high flux once steady-state is reached
+Looking at the steady state results, there is no difference between low and high flux once steady-state is reached (the correct behavior). Since fractionation is calculated precisely when using `add_standard_reaction()` (without any $\alpha \approx 1$ approximations), the isotopic offsets are not exactly the $\epsilon$ values provided.
 
 ```{r steady_state, fig.width = 8, fig.height = 6}
 path %>% generate_reaction_diagram(
@@ -107,7 +130,7 @@ path %>% generate_reaction_diagram(
 ) + facet_grid(~scenario)
 ```
 
-But changing flux fractions at nodes changes the outcome. Just as an example:
+Changing the the branching flux at nodes however, does change the outcome as expected. As an example:
 
 ```{r}
 steady2 <- path %>% 
