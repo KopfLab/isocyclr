@@ -50,7 +50,7 @@ path %>% generate_reaction_diagram() + coord_equal()
 
 #### System of differential equations
 
-Look at the system of differential equations generated for the reaction network.
+The `get_ode_matrix()` makes it easy to look at the system of differential equations generated for the reaction network. To test what it evaluates  to for the first step with the given parameters, take a look at the `evaluate=TRUE` parameter in `?get_ode_matrix` (requires parameters to be set so the variables can all be evaluated).
 
 ```{r}
 path %>% get_ode_matrix() %>% knitr::kable()
