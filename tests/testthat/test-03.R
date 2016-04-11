@@ -57,14 +57,14 @@ test_that("Testing standard reactions", {
                  x = c("A", "A.carbon", "A.nitrogen", "C", "C.carbon"),
                  value = c("A", "A.carbon", "A.nitrogen", "C", "C.carbon"),
                  `dx/dt` = c(
-                   "-1 * flux(my_flux, rev = 1, dir = \"+\") + -1 * flux(my_flux, rev = 1, dir = \"-\")",
-                   "-1 * flux(my_flux, rev = 1, dir = \"+\")/A * (fractionate(A.carbon, a = ceq) - A.carbon) + -1 * flux(my_flux, rev = 1, dir = \"-\")/A * (C.carbon - A.carbon)",
-                   "-1 * flux(my_flux, rev = 1, dir = \"+\")/A * (A.nitrogen - A.nitrogen) + -1 * flux(my_flux, rev = 1, dir = \"-\")/A * (A.nitrogen - A.nitrogen)",
-                   "1 * flux(my_flux, rev = 1, dir = \"+\") + 1 * flux(my_flux, rev = 1, dir = \"-\")",
-                   "1 * flux(my_flux, rev = 1, dir = \"+\")/C * (fractionate(A.carbon, a = ceq) - C.carbon) + 1 * flux(my_flux, rev = 1, dir = \"-\")/C * (C.carbon - C.carbon)")))
+                   "-1 * dir_flux(my_flux, rev = 1, dir = \"+\") + -1 * dir_flux(my_flux, rev = 1, dir = \"-\")",
+                   "-1 * dir_flux(my_flux, rev = 1, dir = \"+\")/A * (fractionate(A.carbon, a = ceq) - A.carbon) + -1 * dir_flux(my_flux, rev = 1, dir = \"-\")/A * (C.carbon - A.carbon)",
+                   "-1 * dir_flux(my_flux, rev = 1, dir = \"+\")/A * (A.nitrogen - A.nitrogen) + -1 * dir_flux(my_flux, rev = 1, dir = \"-\")/A * (A.nitrogen - A.nitrogen)",
+                   "1 * dir_flux(my_flux, rev = 1, dir = \"+\") + 1 * dir_flux(my_flux, rev = 1, dir = \"-\")",
+                   "1 * dir_flux(my_flux, rev = 1, dir = \"+\")/C * (fractionate(A.carbon, a = ceq) - C.carbon) + 1 * dir_flux(my_flux, rev = 1, dir = \"-\")/C * (C.carbon - C.carbon)")))
   expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon.eq = ceq, flux = my_flux, eq_ratio = "P/S") %>%
                   get_ode_matrix())$`dx/dt`[2],
-               "-1 * flux(my_flux, rev = 1, dir = \"+\")/A * (fractionate(A.carbon, a = ceq, m = TRUE) - A.carbon) + -1 * flux(my_flux, rev = 1, dir = \"-\")/A * (C.carbon - A.carbon)")
+               "-1 * dir_flux(my_flux, rev = 1, dir = \"+\")/A * (fractionate(A.carbon, a = ceq, m = TRUE) - A.carbon) + -1 * dir_flux(my_flux, rev = 1, dir = \"-\")/A * (C.carbon - A.carbon)")
 
 
   # test reversible system
@@ -72,7 +72,7 @@ test_that("Testing standard reactions", {
                                            flux = my_flux, reversibility = my_rev) %>%
                  get_flux_matrix(),
                data_frame(reaction = c("rxn1 (forward)", "rxn1 (reverse)"),
-                          flux = c("flux(my_flux, rev = my_rev, dir = \"+\")", "flux(my_flux, rev = my_rev, dir = \"-\")")))
+                          flux = c("dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")")))
   expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
                                            flux = my_flux, reversibility = my_rev) %>%
                  get_flux_isotope_matrix(),

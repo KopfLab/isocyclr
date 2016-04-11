@@ -125,16 +125,16 @@ add_standard_reaction <- function(ip, equation, name = default_rxn_name(ip), flu
     mass_flux <- lazy(flux)
   } else if (type == "EQ") {
     # equilibrium
-    mass_flux <- interp(lazy(flux(flux_, rev = 1, dir = "+")), flux_ = substitute(flux))
-    mass_flux_rev <- interp(lazy(flux(flux_, rev = 1, dir = "-")), flux_ = substitute(flux))
+    mass_flux <- interp(lazy(dir_flux(flux_, rev = 1, dir = "+")), flux_ = lazy(flux))
+    mass_flux_rev <- interp(lazy(dir_flux(flux_, rev = 1, dir = "-")), flux_ = lazy(flux))
   } else if (type == "RV") {
     # reversible reaction
     mass_flux <-
-      interp(lazy(flux(flux_, rev = rev_, dir = "+")),
-             flux_ = substitute(flux), rev_ = substitute(reversibility))
+      interp(lazy(dir_flux(flux_, rev = rev_, dir = "+")),
+             flux_ = lazy(flux), rev_ = substitute(reversibility))
     mass_flux_rev <-
-      interp(lazy(flux(flux_, rev = rev_, dir = "-")),
-             flux_ = substitute(flux), rev_ = substitute(reversibility))
+      interp(lazy(dir_flux(flux_, rev = rev_, dir = "-")),
+             flux_ = lazy(flux), rev_ = substitute(reversibility))
   }
 
   # construct bare flux isotope calls (simplify by only including parameters when

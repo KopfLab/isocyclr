@@ -13,7 +13,7 @@
 #' computationally feasible.
 #' @export
 #' @note This function uses standard evaluation.
-flux <- function(net, reversibility, direction, model_offset = 1e-9){
+dir_flux <- function(net, reversibility, direction, model_offset = 1e-9){
 
   # calculate flux
   if (direction == "+") {

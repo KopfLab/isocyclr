@@ -26,7 +26,7 @@ get_reaction_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameter
       as.list(i$components),
       list(flux =
              if (evaluate) {
-               lazy_eval(i$flux, parameters)
+               lazy_eval(i$flux, data = parameters)
              } else {
                deparse(i$flux$expr, width.cutoff = 500L) %>% paste0(collapse = "")
              }))%>%
