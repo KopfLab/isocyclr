@@ -22,6 +22,7 @@ Imports:
 Suggests:
     testthat,
     rmarkdown,
+    magrittr,
     knitr
 VignetteBuilder: knitr
 Collate:
