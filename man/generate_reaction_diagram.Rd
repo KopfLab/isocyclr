@@ -4,7 +4,10 @@
 \alias{generate_reaction_diagram}
 \title{plot reaction diagram}
 \usage{
-generate_reaction_diagram(ip)
+generate_reaction_diagram(ip, y_data = NULL)
+}
+\arguments{
+\item{y_data}{data frame with component and y columns to be used for plotting. If missing, arranges diagram like reaction scheme.}
 }
 \description{
 plot reaction diagram

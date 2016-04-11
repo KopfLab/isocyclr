@@ -1,0 +1,240 @@
+---
+title: "examples"
+output: html_document
+---
+
+```{r}
+library(magrittr)
+library(ggplot2)
+hayes <- isopath() %>% 
+  add_isotope("carbon") %>% 
+  add_component("A", carbon, variable = FALSE) %>% 
+  add_component(LETTERS[2:9], carbon) %>% # add B through I
+  add_standard_reaction(A == B, eps.carbon = e1) %>% 
+  add_standard_reaction(B == C, eps.carbon = e2) %>% 
+  add_standard_reaction(C == D, eps.carbon = e3, flux = f3) %>% 
+  add_standard_reaction(C == E, eps.carbon = e4, flux = f4) %>% 
+  add_standard_reaction(E == F, eps.carbon = e5, alpha.carbon.rev = 1, rev = 1) %>%
+  add_standard_reaction(F == G, eps.carbon = e6, flux = f6) %>% 
+  add_standard_reaction(F == H, eps.carbon = e7, flux = f7) %>% 
+  add_standard_reaction(H == I, eps.carbon = e8)
+hayes %>% generate_reaction_diagram() + coord_equal()
+```
+
+```{r}
+test <- sys %>% 
+  add_standard_reaction(A == C, alpha.carbon = cff.fwd, eps.carbon.eq = cff.eq, flux = my_flux, reversibility = my_rev)
+test %>% get_flux_matrix()
+test %>% get_flux_isotope_matrix()
+test %>% generate_reaction_diagram()
+```
+
+
+```{r}
+test(alpha.carbon = 5, alpha.nitrogen = var, permil = F, flux = net_test)
+test(alpha.carbon = 5, eps.nitrogen = 3, eps.carbon.rev = 2, eps.nitrogen.eq = eq_eps, reversibility = 0.5, flux = net)
+test(alpha.carbon = 5, alpha.nitrogen = pos_alpha, eps.carbon.rev = 2, alpha.nitrogen.eq = eq_alpha, reversibility = 0.5, flux = net)
+#test(alpha.carbon = 5, alpha.nitrogen = var, permil = T)
+#test(alpha.carbon = 5, alpha.nitrogen = var, reversibility = x)
+```
+
+
+
+
+```{r}
+library(magrittr)
+test <- isopath() %>% 
+  add_isotope("C") %>% 
+  add_isotope("N") %>% 
+  add_component("X", 2 * C, N) %>%
+  add_component("Y", C, N) %>%
+  add_component("V", C, N) %>%
+  add_component("A", C, N) %>%
+  add_component("B", C, N) %>%
+  add_component("C") %>% 
+  add_component("Z", C) %>%
+  add_component("W", 3 * C, N) %>%
+  add_component("R", C) %>%
+  add_component("K") %>%
+  add_component("Q") %>%
+  add_custom_reaction(name = "rxn1", X == 3 * Y + V) %>%
+  add_custom_reaction(name = "rxn2", Q + Y + K == W + K + 2 * Z) %>% 
+  add_custom_reaction(name = "rxn3", V == R) %>% 
+  add_custom_reaction(name = "rxn4", Z + R == X) %>% 
+  add_custom_reaction(name = "rxn5", B == V) %>% 
+  add_custom_reaction(name = "rxn6", A + C == B + Q) 
+test %>% generate_reaction_diagram()
+```
+
+
+```{r}
+n_cycle <- isopath() %>% 
+  add_isotope("O") %>% 
+  add_isotope("N") %>% 
+#  add_component("NO3_out", N, 3*O, constant = TRUE) %>%
+  add_component("NO3", N, 3*O) %>%
+  add_component("NO2", N, 2*O) %>%
+#  add_component("N2O", 2*N, O) %>%
+  add_component("N2", 2*N, variable = FALSE) %>% 
+  add_component("H2O", O, variable = FALSE) %>%
+  #add_custom_reaction("nitrate transport", NO3_out == NO3) %>%
+  add_custom_reaction("nitrate reduction", NO3 == NO2 + H2O) %>%
+  add_custom_reaction("nitrite oxidation", NO3 == NO2 + H2O) %>%
+  add_custom_reaction("nitrite reduction", 2 * NO2 == N2 + 2 * H2O) %>%
+  #add_custom_reaction("nitrous oxide reduction", N2O == N2 + H2O)
+  identity()
+n_cycle %>% generate_reaction_diagram()
+```
+
+```{r}
+test_rxn %>% 
+  group_by(xstart, ystart, xend, yend) %>% 
+  arrange(reaction) %>% 
+  mutate(y_offset = 0.1 * seq(-n()+1, n()-1, length.out = n())) %>% 
+  ungroup() %>% 
+  mutate(
+    ystart = ystart + y_offset,
+    yend = yend + y_offset
+  )
+```
+
+
+
+```{r}
+n_cycle %>% get_reaction_matrix()
+n_cycle %>% get_component_matrix()
+n_cycle %>% get_reaction_component_matrix()
+```
+
+
+```{r}
+library(readxl)
+library(microbenchmark)
+params <- read_excel("tmp/parameters.xlsx", sheet = "system1")
+
+my_test <- n_cycle %>% 
+  add_custom_reaction("nitrate reduction", NO3 == NO2 + H2O,
+               flux = dm,
+               flux.N = NO3.N - eps15_NAR,
+               flux.NO3.O = NO3.O - eps15_NAR / eps15_eps18_NAR_ratio,
+               flux.NO2.O = NO3.O + eps18_NAR_b) %>% 
+  add_custom_reaction("nitrite reduction", 2 * NO2 == N2 + 4 * H2O,
+               flux = dm/2,
+               flux.N = NO2.N - eps15_NIR,
+               flux.NO2.O = NO2.O - eps15_NIR / eps15_eps18_NAR_ratio) %>%
+  set_parameters(params)
+
+my_test %>% get_reaction_component_matrix()
+my_test %>% get_flux_matrix(eval = T)
+my_test %>% get_flux_isotope_matrix(eval = T) 
+my_test %>% get_component_change_matrix()
+my_test %>% get_isotope_change_matrix() 
+my_test %>% get_component_change_summary()
+my_test %>% get_isotope_change_summary()
+```
+
+
+```{r}
+
+eq_text <- paste0("list(", 
+       (sys %>% get_ode_matrix() %>% mutate(exp = paste(x, "=", `dx/dt`)))$exp[1] %>% 
+         paste(collapse = ", "), ")")
+eq <- interp(lazy(x), x = parse(text = eq_text, keep.source = F, n = NULL)[[1]])
+eq_text <- paste0("list(", 
+       (sys %>% get_ode_matrix() %>% mutate(exp = paste(x, "=", `dx/dt`)))$exp %>% 
+         paste(collapse = ", "), ")")
+eq2 <- interp(lazy(x), x = parse(text = eq_text, keep.source = F, n = NULL)[[1]]) 
+eq_text <- paste0("list(", 
+       (n_cycle %>% get_ode_matrix() %>% mutate(exp = paste(x, "=", `dx/dt`)))$exp %>% 
+         paste(collapse = ", "), ")")
+eq3 <- interp(lazy(x), x = parse(text = eq_text, keep.source = F, n = NULL)[[1]]) 
+microbenchmark(eq %>% lazy_eval(sys$parameters[1,]),
+               modifyList(list(a = 1, b=2), eq2 %>% lazy_eval(sys$parameters[1,])),
+               eq3 %>% lazy_eval(n_cycle$parameters[1,]))
+```
+
+
+```{r}
+
+microbenchmark(
+  my_test %>% get_reaction_component_matrix(),
+  my_test %>% get_component_change_matrix(check_missing = F),
+  my_test %>% get_flux_matrix(eval = T),
+  my_test %>% get_flux_isotope_matrix(eval = T),
+  my_test %>% get_isotope_change_matrix(check_missing = F),
+  my_test %>% get_isotope_change_summary(check_missing = F) 
+)
+#my_test %>% test_it_out2(check_missing = F)
+```
+
+
+```{r}
+  sys <- isopath() %>%
+    add_isotope("C") %>% add_isotope("N") %>%
+    add_component("X", C, N) %>% add_component("Y", C, N) %>%
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
+    set_parameters(X = c(10,20), dm = c(0.2, 0.4)) %>% 
+    set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1, dN = -5, X.dC = 10, Y.dC = 5) %>% 
+    add_custom_reaction(X == 2.5 * Y, name = "my_rxn", 
+                        flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC)
+```
+
+
+```{r}
+microbenchmark(
+  #sys %>% run_model(2),
+  sys %>% run_model2(2),
+  times = 10
+)
+```
+
+```{r}
+my_test <- function(a = c("a", "b")) {
+  if (missing(a)) stop("require")
+  a <- match.arg(a)
+  return(a)
+}
+my_test("a")
+```
+
+
+```{r}
+sys %>% run_model2(100)
+```
+
+
+```{r}
+model<-function(t, y, pars) {
+
+with (as.list(c(y, pars)),{
+
+  Min       = r*OM
+  oxicmin   = Min*(O2/(O2+ks))
+  anoxicmin = Min*(1-O2/(O2+ks))* SO4/(SO4+ks2)
+
+  dOM  = Flux - oxicmin - anoxicmin
+  dO2  = -oxicmin      -2*rox*HS*(O2/(O2+ks)) + D*(BO2-O2)
+  dSO4 = -0.5*anoxicmin  +rox*HS*(O2/(O2+ks)) + D*(BSO4-SO4)
+  dHS  = 0.5*anoxicmin   -rox*HS*(O2/(O2+ks)) + D*(BHS-HS)
+
+  list(c(dOM, dO2, dSO4, dHS), SumS = SO4+HS)
+})
+}
+
+# parameter values
+pars <- c(D = 1, Flux = 100, r = 0.1, rox = 1,
+          ks = 1, ks2 = 1, BO2 = 100, BSO4 = 10000, BHS = 0)
+# initial conditions
+y <- c(OM = 1, O2 = 1, SO4 = 1, HS = 1)
+
+# direct iteration
+print( system.time(
+  ST <- stode(y = y, func = model, parms = pars, pos = c(TRUE, TRUE, FALSE, FALSE))
+))
+
+print( system.time(
+  ST2 <- runsteady(y = y, func = model, parms = pars, times = c(0, Inf))
+))
+
+```
+

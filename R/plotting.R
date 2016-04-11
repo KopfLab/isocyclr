@@ -2,7 +2,7 @@
 
 #' plot reaction diagram
 #'
-#' @parm y_data data frame with component and y columns to be used for plotting. If missing, arranges diagram like reaction scheme.
+#' @param y_data data frame with component and y columns to be used for plotting. If missing, arranges diagram like reaction scheme.
 #' @export
 generate_reaction_diagram <- function(ip, y_data = NULL) {
   if (!is(ip, "isopath")) stop ("can only generate diagram for isopath", call. = FALSE)
