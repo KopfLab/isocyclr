@@ -167,7 +167,7 @@ run_steady_state <- function(ip, ...) {
   check_model(ip)
 
   # info
-  message(sprintf("Finding steady-state for %d scenario(s)...", nrow(ip$parameters)))
+  message(sprintf("Looking for steady-state for %d scenario(s)...", nrow(ip$parameters)))
 
   # ode function
   func <- get_ode_function(ip)
