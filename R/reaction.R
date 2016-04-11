@@ -10,8 +10,6 @@
 #' @param abscissa The reaction loaction. This is used purely for graphical representation (see \link{generate_reaction_diagram}). By default, a decent value will be guessed from the existing reactions in the \link{isopath}. This works fairly well as long as all reactions after the first one are added to the isopath in an order such that at least one reactant or product is already part of a different reaction in the pathway.
 #' @return The \link{isopath} object with the new reaction added.
 #' @family reaction functions
-#' @examples
-#' isopath() %>% add_component(c("A", "B")) %>% add_custom_reaction(A == 3 * B)
 #' @note Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
 #' @export
 add_custom_reaction <- function(ip, equation, name = default_rxn_name(ip), flux = NULL, ..., abscissa = NULL) {
