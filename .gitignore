@@ -12,6 +12,7 @@
 
 # Tmp directory and files
 tmp/*
+plots/*
 ~$*
 
 # Ignore plots created by testing functionality
