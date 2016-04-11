@@ -27,7 +27,7 @@ library(tidyr)
 
 ## Set up reaction path
 
-Set up a reaction network akin to Figure 2 in the classic paper by John Hayes *Fractionation of carbon and hydrogen isotopes in biosynthetic processes. Rev Mineral Geochem 43, 225–277. (2001)*.
+Set up a reaction network akin to Figure 2 in John Hayes' classic *Fractionation of carbon and hydrogen isotopes in biosynthetic processes. Rev Mineral Geochem 43, 225–277. (2001)*.
 
 ```{r}
 path <- isopath() %>%
