@@ -10,10 +10,19 @@ This R package is intended as an educational tool to facilitate the modeling of 
 
 ```
 install.packages("devtools")
-devtools::install_github("sebkopf/isocyclr")
+# with vignettes
+devtools::install_github("sebkopf/isocyclr", build_vignettes = TRUE)
 ```
 
-# Example
+```
+# OR ALTNERATIVELY: 
+# without vignettes (faster and recommended if build_vignettes = TRUE errors)
+devtools::install_github("sebkopf/isocyclr", build_vignettes = TRUE)
+```
+
+Example code for use of **isocyclr** is always availabe in its latest interation in the vignettes of the package which can be explored from within R with the command `browseVignettes("isocyclr")` if the vignettes are installed. 
+
+# Example vignette
 
 Load **isocyclr** and other packages used in these examples. Help on all functions is available within R (e.g. via `?add_standard_reaction`).
 
