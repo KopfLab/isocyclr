@@ -17,7 +17,7 @@ devtools::install_github("sebkopf/isocyclr", build_vignettes = TRUE)
 ```
 # OR ALTNERATIVELY: 
 # without vignettes (faster and recommended if build_vignettes = TRUE errors)
-devtools::install_github("sebkopf/isocyclr", build_vignettes = TRUE)
+devtools::install_github("sebkopf/isocyclr", build_vignettes = FALSE)
 ```
 
 Example code for use of **isocyclr** is always availabe in its latest interation in the vignettes of the package which can be explored from within R with the command `browseVignettes("isocyclr")` if the vignettes are installed. 
