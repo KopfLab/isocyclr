@@ -31,15 +31,4 @@ add_component_ <- function(ip, name, ..., .dots = list(), variable = FALSE) {
   return(invisible(ip))
 }
 
-#' get the component matrix for an isopath
-#' @param na how to group compounds that have no isotopes specified
-#' @family system information
-#' @export
-get_component_matrix <- function(ip, na = "unspecified") {
-  if (!is(ip, "isopath")) stop ("can only get component matrix from an isopath")
-  lapply(ip$components, function(i) {
-    if ( length(i$isotopes) == 0 ) i$isotopes <- setNames(1, na)
-    c(list(component = i$name, variable = i$variable), as.list(i$isotopes)) %>% as_data_frame()
-  }) %>%
-  bind_rows()
-}
+
