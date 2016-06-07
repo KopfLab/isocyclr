@@ -225,20 +225,6 @@ get_ode_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,])
     select(x, value, `dx/dt`)
 }
 
-#' store info
-#'
-#' store the information about the system in the info list
-#' (this is done for performance reasons to reduce time
-#' intenstive calculations during ode integrations)
-#' @param ip the system
-#' @note deprecated
-store_info <- function(ip) {
-  stopifnot(is(ip, "isopath"))
-  ip$info$reaction_component_matrix <- ip %>% get_reaction_component_matrix()
-  ip$info$variable_reaction_component_matrix <- ip$info$reaction_component_matrix %>% filter(variable == TRUE)
-  return(invisible(ip))
-}
-
 #' @export
 print.isopath <- function(x, ...) {
   # implement this eventually
@@ -247,11 +233,14 @@ print.isopath <- function(x, ...) {
   cat("\nCOMPONENTS - ")
   print(x %>% get_component_matrix())
   cat("\nREACTIONS - ")
-  print(x %>% get_reaction_matrix())
-  cat("\nFLUXES - ")
-  print(x %>% get_flux_matrix(eval = F))
-  cat("\nFLUX ISOTOPES - ")
-  print(x %>% get_flux_isotope_matrix(eval = F))
+  print(x %>% get_reaction_matrix2() %>% select(-flux))
+  cat("\nORDINARY DIFFERENTIAL EQUATIONS - ")
+  odes <- x %>% get_ode_matrix(eval = F) %>% select(x, `dx/dt`)
+  max_chars <- getOption("width") - max(nchar(odes$x))-15
+  odes %>% mutate(
+    `dx/dt` = substr(`dx/dt`, 1, max_chars) %>%
+      paste0( ifelse(nchar(`dx/dt`) > max_chars, "...", ""))) %>%
+    print()
   cat("\nPARAMETERS - ")
   print(x$parameters)
 }

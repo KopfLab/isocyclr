@@ -9,8 +9,5 @@ add_isotope <- function(ip, name) {
     ip$isotopes[[isotope]] <- list()
   }
 
-  # store info
-  ip <- ip %>% store_info()
-
   return(invisible(ip))
 }

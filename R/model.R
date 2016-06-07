@@ -6,12 +6,6 @@ check_model <- function(ip) {
 
   tryCatch({
 
-    # parameters
-    missing_params <- setdiff(ip$info$variables, names(ip$parameters))
-    if (length(missing_params) > 0)
-      stop("parameters required for minimal parameter set missing: ",
-           missing_params %>% paste(collapse = ", "), call. = FALSE)
-
     # do a sample calculation for each parameter set
     ip$parameters %>%
       group_by_(.dots = names(ip$parameters)) %>%

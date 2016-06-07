@@ -12,8 +12,18 @@ generate_reaction_diagram <- function(ip, y_data = NULL) {
 
   # determin x locations for components
   general_x <-
-    ip %>% get_reaction_component_matrix() %>%
-    mutate(x = abscissa)
+    # combine compnentes and isotopes
+    left_join(
+      ip %>% get_component_matrix() %>%
+        gather(isotope, iso_stoic, -component, -variable),
+      ip %>% get_reaction_matrix2() %>%
+        gather(component, comp_stoic, -reaction, -abscissa, -flux),
+      by = "component"
+    ) %>%
+    # make sure to remove empty entries
+    filter(!is.na(iso_stoic), !is.na(comp_stoic)) %>%
+    # calculate abscissa for each component
+    mutate(x = abscissa - ifelse(comp_stoic < 0, 1, 0 ))
 
   # determine y locations for components
   if (is.null(y_data)) {

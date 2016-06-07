@@ -284,10 +284,7 @@ add_reaction_ <- function(ip, equation, name, flux, isotopes = list(),
     stop("missing isotope definition(s), make sure to add this with add_isotope() first: ",
          missing_isos %>% paste(collapse = ", "), call. = FALSE)
 
-  # store info
-  ip <- ip %>% store_info()
-
-  return(invisible(ip))
+ return(invisible(ip))
 }
 
 
@@ -303,7 +300,7 @@ default_abscissa <- function(ip, new_components) {
   # combine new components and existing reactions
   rxns <-
     left_join(
-      ip$info$reaction_component_matrix,
+      ip %>% get_reaction_component_matrix2(),
       new_components %>% as.list() %>% as_data_frame() %>% gather(new_component, new_comp_stoic),
       by = c("component" = "new_component")
     ) %>%
@@ -316,7 +313,7 @@ default_abscissa <- function(ip, new_components) {
 
   # components not found
   if (nrow(rxns) == 0)
-    return( max(ip$info$reaction_component_matrix$abscissa) + 1 )
+    return( max(ip$get_reaction_component_matrix2()$abscissa) + 1 )
 
   # figure out where to position reaction from existing component abscissa
   new_ab <- with(rxns[1,], {
@@ -330,40 +327,42 @@ default_abscissa <- function(ip, new_components) {
 #' get the reaction matrix for an isopath
 #' @family system information
 #' @export
-get_reaction_matrix <- function(ip) {
-  if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
-
-  lapply(ip$reactions, function(i) {
-    c(list(reaction = i$name, abscissa = i$abscissa), as.list(i$components)) %>% as_data_frame()
-  }) %>%
-    bind_rows()
-}
+#' @note deprecate
+# get_reaction_matrix <- function(ip) {
+#   if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
+#
+#   lapply(ip$reactions, function(i) {
+#     c(list(reaction = i$name, abscissa = i$abscissa), as.list(i$components)) %>% as_data_frame()
+#   }) %>%
+#     bind_rows()
+# }
 
 #' get the combined reaction_component_matrix
 #' @family system information
 #' @export
-get_reaction_component_matrix <- function(ip) {
-  if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
-
-  cps <- ip %>% get_component_matrix()
-  rxn <- ip %>% get_reaction_matrix()
-
-  if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
-
-  left_join(
-    rxn %>% gather(component, comp_stoic, -reaction, -abscissa),
-    cps %>% gather(isotope, iso_stoic, -component, -variable),
-    by = "component"
-  ) %>%
-    # make sure to remove empty entires
-    filter(!is.na(iso_stoic), !is.na(comp_stoic)) %>%
-    # calculate abscissa for each component
-    mutate(abscissa = abscissa - ifelse(comp_stoic < 0, 1, 0 )) %>%
-    # arrange by isotope, then component abscissa order
-    arrange(isotope, reaction, comp_stoic > 0, component) %>%
-    # order columns
-    select(isotope, reaction, component, comp_stoic, variable, abscissa)
-}
+#' @note deprecate
+# get_reaction_component_matrix <- function(ip) {
+#   if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
+#
+#   cps <- ip %>% get_component_matrix()
+#   rxn <- ip %>% get_reaction_matrix()
+#
+#   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
+#
+#   left_join(
+#     rxn %>% gather(component, comp_stoic, -reaction, -abscissa),
+#     cps %>% gather(isotope, iso_stoic, -component, -variable),
+#     by = "component"
+#   ) %>%
+#     # make sure to remove empty entires
+#     filter(!is.na(iso_stoic), !is.na(comp_stoic)) %>%
+#     # calculate abscissa for each component
+#     mutate(abscissa = abscissa - ifelse(comp_stoic < 0, 1, 0 )) %>%
+#     # arrange by isotope, then component abscissa order
+#     arrange(isotope, reaction, comp_stoic > 0, component) %>%
+#     # order columns
+#     select(isotope, reaction, component, comp_stoic, variable, abscissa)
+# }
 
 #' parse reaction component
 #' pulls out the stoichiometry and component

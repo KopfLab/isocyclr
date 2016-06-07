@@ -60,6 +60,23 @@ expand_parameters <- function(ip, ...) {
   return(invisible(ip))
 }
 
+#' mutate parameters
+#'
+#' modify existing parameters with mutate statements
+#' @param ... mutate expressions
+#' @export
+mutate_parameters <- function(ip, ...) {
+  if (!is(ip, "isopath")) stop ("parameters can only be mutate for an isopath")
+  if (nrow(ip$parameters) == 0) stop("no parameters set yet for this isopath")
+
+  ldots <- lazy_dots(...)
+  ip$parameters <-
+    ip$parameters %>%
+    mutate_(.dots = ldots)
+
+  return(invisible(ip))
+}
+
 #' @rdname set_parameters
 #' @export
 get_parameters <- function(ip) {
