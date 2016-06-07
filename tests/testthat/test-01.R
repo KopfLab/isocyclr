@@ -127,6 +127,9 @@ test_that("Adding reaction flux and isotopes works", {
 })
 
 test_that("Adding parameters works", {
+
+  expect_error(set_parameters("incorrect"), "can only be .* for an isopath")
+
   sys <- isopath() %>%
     add_isotope("C") %>%
     add_component("X", C) %>%
@@ -137,17 +140,19 @@ test_that("Adding parameters works", {
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys2, X = 100, new = 0.1)$parameters,
                 data_frame(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
-  # multi line
-  sys3 <- set_parameters(sys2, sys2$parameters[c(1,1),]) %>%
-    set_parameters(X = 100, new = 0.1)
+
+  # expand parameters
   expect_equal(
-    set_parameters(sys3, Z = c(1,2))$parameters,
-    data_frame(X = c(100, 100), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4),
-               new = c(0.1, 0.1), Z = c(1, 2)))
+    expand_parameters(sys2, Z = c(1,2))$parameters,
+    data_frame(X = c(1, 1), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4), Z = c(1, 2)))
   expect_equal(
-    (sys3 %>% set_parameters(Z = c(1,2)) %>% set_parameters(X = 5))$parameters,
-    data_frame(X = c(5, 5), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4),
-               new = c(0.1, 0.1), Z = c(1, 2)))
+    (sys2 %>% expand_parameters(Z = c(1,2)) %>% expand_parameters(new = 1:3))$parameters,
+    data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4, Z = c(1, 1, 1, 2, 2, 2), new = c(1:3, 1:3)))
+
+  # expanding parameters
+  expect_error(expand_parameters("correct"), "can only be .* for an isopath")
+  expect_error(expand_parameters(sys, x=1), "no parameters set yet for this isopath")
+
 
 })
 
