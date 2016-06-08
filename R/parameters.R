@@ -38,15 +38,16 @@ expand_parameters <- function(ip, ...) {
 
   if (!is(ip, "isopath")) stop ("parameters can only be expanded for an isopath")
   if (nrow(ip$parameters) == 0) stop("no parameters set yet for this isopath")
-  ip$parameters <- ip$parameters %>% isocyclr::expand_data_frame(...)
+  ip$parameters <- ip$parameters %>% expand_data_frame(...)
   return(invisible(ip))
 }
 
 #' expand data frame
-#' not exported, utility function to expand data frames with non-standard evaluation
+#' utility function to expand data frames with non-standard evaluation
 #' used by \code{\link{expand_parameters}}
 #' @param ... use for non standard evaluation
 #' @param .dots use for standard evaluation
+#' @export
 expand_data_frame <- function(df, ..., .dots = list()) {
 
   # dots
