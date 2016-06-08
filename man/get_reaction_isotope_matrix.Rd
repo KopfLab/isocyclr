@@ -7,6 +7,11 @@
 get_reaction_isotope_matrix(ip, evaluate = FALSE,
   parameters = ip$parameters[1, ])
 }
+\arguments{
+\item{evaluate}{if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)}
+
+\item{parameters}{data to use for evaluating expressions}
+}
 \description{
 if \code{evaluate = TRUE}, excludes components that are not variable
 }
@@ -14,17 +19,9 @@ if \code{evaluate = TRUE}, excludes components that are not variable
 TODO: write tests and replace all the get_flux... functions!!
 }
 \seealso{
-Other system information: \code{\link{get_component_change_matrix}},
-  \code{\link{get_component_change_summary}},
-  \code{\link{get_component_matrix}},
-  \code{\link{get_flux_isotope_matrix}},
-  \code{\link{get_flux_matrix}},
-  \code{\link{get_isotope_change_matrix}},
-  \code{\link{get_isotope_change_summary}},
+Other system information: \code{\link{get_component_matrix}},
   \code{\link{get_ode_matrix}},
-  \code{\link{get_reaction_component_matrix2}},
   \code{\link{get_reaction_component_matrix}},
-  \code{\link{get_reaction_matrix2}},
   \code{\link{get_reaction_matrix}}
 }
 

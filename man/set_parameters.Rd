@@ -13,6 +13,6 @@ get_parameters(ip)
 \item{...}{parameters, either a whole set of parameters as a single data frame, or a list of individual values, will try to merge with existing parameters and if neceesary overwrite existing parameters with the same name}
 }
 \description{
-add parameter data frame to the isopath
+to expand on an existing parameter set with multiple variations, use \code{\link{expand_parameters}}
 }
 
