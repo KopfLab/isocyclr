@@ -7,7 +7,7 @@
 get_component_matrix(ip, na = "unspecified")
 }
 \arguments{
-\item{na}{how to group compounds that have no isotopes specified}
+\item{na}{how to group compounds that have no isotopes specified, if NULL will omit these columns}
 }
 \description{
 get the component matrix for an isopath

@@ -12,14 +12,20 @@ isopath <- function() {
 }
 
 #' get the component matrix for an isopath
-#' @param na how to group compounds that have no isotopes specified
+#' @param na how to group compounds that have no isotopes specified, if NULL will omit these columns
 #' @family system information
 #' @export
 get_component_matrix <- function(ip, na = "unspecified") {
   if (!is(ip, "isopath")) stop ("can only get component matrix from an isopath")
   lapply(ip$components, function(i) {
-    if ( length(i$isotopes) == 0 ) i$isotopes <- setNames(1, na)
-    c(list(component = i$name, variable = i$variable), as.list(i$isotopes)) %>% as_data_frame()
+    if ( length(i$isotopes) == 0 && is.null(na) ) {
+      list(component = i$name, variable = i$variable)
+    } else if ( length(i$isotopes) == 0 && !is.null(na) ) {
+      c(list(component = i$name, variable = i$variable), setNames(1, na))
+    } else {
+      c(list(component = i$name, variable = i$variable), as.list(i$isotopes))
+    } %>% as_data_frame()
+
   }) %>%
     bind_rows()
 }
@@ -59,7 +65,7 @@ get_reaction_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters
 get_reaction_component_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
   if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
 
-  cps <- ip %>% get_component_matrix()
+  cps <- ip %>% get_component_matrix(na = NULL)
   rxn <- ip %>% get_reaction_matrix(eval = evaluate, param = parameters)
 
   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
@@ -116,7 +122,7 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
   if (!is(ip, "isopath")) stop ("can only calculate reaction isotope matrix from an isopath")
 
   # component and reaction matrices
-  cps <- ip %>% get_component_matrix()
+  cps <- ip %>% get_component_matrix(na = NULL)
   rxn <- ip %>% get_reaction_matrix(eval = evaluate, param = parameters)
 
   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
@@ -164,9 +170,14 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
     rxn %>% gather(component, comp_stoic, -reaction, -abscissa, -flux),
     cps %>% gather(isotope, iso_stoic, -component, -variable),
     by = "component"
-  ) %>%
-    # remove listings that don't have component or isotope
-    filter(!is.na(comp_stoic), !is.na(iso_stoic))
+  )
+
+  # make sure columns exist even if gather didn't gather anything
+  if (is.null(df$isotope)) {
+    df <- df %>% mutate(isotope = NA, iso_stoic = NA)
+  }
+  # remove listings that don't have component or isotope
+  df <- df %>% filter(!is.na(comp_stoic), !is.na(iso_stoic))
 
   # exclude invariable components if evaluating
   if (evaluate)

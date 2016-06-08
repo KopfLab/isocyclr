@@ -63,6 +63,12 @@ test_that("Isopath structure matrices work", {
                N = c(1, NA, NA, NA),
                unspecified = c(NA, NA, 1, 1))
   )
+  expect_equal(sys %>% get_component_matrix(na = NULL),
+               data_frame(component = c("X", "Y", "Z", "W"),
+                          variable = c(T, F, T, T),
+                          C = c(2, 1, NA, NA),
+                          N = c(1, NA, NA, NA))
+  )
 
   # reaction matrix
   expect_equal(sys %>% get_reaction_matrix(),
@@ -241,6 +247,13 @@ test_that("Evaluation works", {
                  x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"),
                  value = c(10, -1, 0, 20, -5, 10),
                  `dx/dt` = c(-3, -1.2, -0.6, 6, 3.3, -2.4)))
+
+  # special case: no isotopes in system
+  sys2 <- isopath() %>%
+    add_component( c("X", "Y") ) %>%
+    add_custom_reaction(X == 2 * Y)
+  expect_equal(sys2 %>% get_reaction_component_matrix() %>% nrow(), 2)
+  expect_equal(sys2 %>% get_reaction_isotope_matrix() %>% nrow(), 0)
 
   # expansion: should expand and do a test on a multiple reaction system!
 
