@@ -31,7 +31,7 @@ test_that("Running model works", {
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux.N = dN, flux.X.C = X.dC) %>%
     set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
 
-  expect_error(run_model(NULL), "can only run model for an isopath")
+  expect_error(run_model("error"), "can only run model for an isopath")
   expect_error(run_model(sys), "time_steps is required")
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* object 'X' not found")
   sys <- sys %>% set_parameters(transform(sys$parameters, X = c(1, 1)))

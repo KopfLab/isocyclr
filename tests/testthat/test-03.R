@@ -68,37 +68,39 @@ test_that("Testing standard reactions", {
 
 
   # test reversible system
-  # expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
-  #                                          flux = my_flux, reversibility = my_rev) %>%
-  #                get_flux_matrix(),
-  #              data_frame(reaction = c("rxn1 (forward)", "rxn1 (reverse)"),
-  #                         flux = c("dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")")))
-  # expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
-  #                                          flux = my_flux, reversibility = my_rev) %>%
-  #                get_flux_isotope_matrix(),
-  #              data_frame(
-  #                reaction = rep(c("rxn1 (forward)", "rxn1 (reverse)"), each = 2),
-  #                isotope = "carbon",
-  #                component = rep(c("A", "C"), times=2),
-  #                flux_isotope = rep(c("fractionate(A.carbon, a = cff.fwd)",
-  #                                     "fractionate(C.carbon, a = cff.rev)"), each = 2)
-  #              ))
+  expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
+                                           flux = my_flux, reversibility = my_rev) %>%
+                 get_reaction_component_matrix() %>% select(reaction, flux),
+               data_frame(reaction = c("rxn1 (forward)", "rxn1 (reverse)", "rxn1 (forward)", "rxn1 (reverse)"),
+                          flux = c("dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")",
+                                   "dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")")))
+  expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
+                                           flux = my_flux, reversibility = my_rev) %>%
+                 get_reaction_isotope_matrix() %>% select(isotope, component, reaction, flux_isotope),
+               data_frame(
+                 isotope = c(rep("carbon", 4), rep("nitrogen", 2)),
+                 component = rep(c("A", "C", "A"), each = 2),
+                 reaction = rep(c("rxn1 (forward)", "rxn1 (reverse)"), times = 3),
+                 flux_isotope = c(rep(c("fractionate(A.carbon, a = cff.fwd)",
+                                      "fractionate(C.carbon, a = cff.rev)"), times = 2),
+                                  rep("A.nitrogen", 2))
+               ))
 
   # test reversible that uses equilibrium isotope effect
-  # expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.eq = cff.eq, eq_ratio = "S/P",
-  #                                          flux = my_flux, reversibility = my_rev) %>%
-  #                get_flux_isotope_matrix())$flux_isotope[4],
-  #              "fractionate(C.carbon, a = cff.fwd/cff.eq)")
-  # expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.eq = cff.eq, eq_ratio = "P/S",
-  #                                           flux = my_flux, reversibility = my_rev) %>%
-  #                 get_flux_isotope_matrix())$flux_isotope[4],
-  #              "fractionate(C.carbon, a = cff.fwd * cff.eq)")
-  # expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, eps.carbon.eq = eff.eq, eq_ratio = "S/P",
-  #                                           flux = my_flux, reversibility = my_rev) %>%
-  #                 get_flux_isotope_matrix())$flux_isotope[4],
-  #              "fractionate(C.carbon, a = cff.fwd/(0.001 * eff.eq + 1))")
-  # expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, eps.carbon.eq = eff.eq, eq_ratio = "P/S",
-  #                                           flux = my_flux, reversibility = my_rev) %>%
-  #                 get_flux_isotope_matrix())$flux_isotope[4],
-  #              "fractionate(C.carbon, a = cff.fwd * (0.001 * eff.eq + 1))")
+  expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.eq = cff.eq, eq_ratio = "S/P",
+                                           flux = my_flux, reversibility = my_rev) %>%
+                 get_reaction_isotope_matrix())$flux_isotope[4],
+               "fractionate(C.carbon, a = cff.fwd/cff.eq)")
+  expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.eq = cff.eq, eq_ratio = "P/S",
+                                            flux = my_flux, reversibility = my_rev) %>%
+                  get_reaction_isotope_matrix())$flux_isotope[4],
+               "fractionate(C.carbon, a = cff.fwd * cff.eq)")
+  expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, eps.carbon.eq = eff.eq, eq_ratio = "S/P",
+                                            flux = my_flux, reversibility = my_rev) %>%
+                  get_reaction_isotope_matrix())$flux_isotope[4],
+               "fractionate(C.carbon, a = cff.fwd/(0.001 * eff.eq + 1))")
+  expect_equal((sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, eps.carbon.eq = eff.eq, eq_ratio = "P/S",
+                                            flux = my_flux, reversibility = my_rev) %>%
+                  get_reaction_isotope_matrix())$flux_isotope[4],
+               "fractionate(C.carbon, a = cff.fwd * (0.001 * eff.eq + 1))")
 })
