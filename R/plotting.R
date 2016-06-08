@@ -16,7 +16,7 @@ generate_reaction_diagram <- function(ip, y_data = NULL) {
     left_join(
       ip %>% get_component_matrix() %>%
         gather(isotope, iso_stoic, -component, -variable),
-      ip %>% get_reaction_matrix2() %>%
+      ip %>% get_reaction_matrix() %>%
         gather(component, comp_stoic, -reaction, -abscissa, -flux),
       by = "component"
     ) %>%

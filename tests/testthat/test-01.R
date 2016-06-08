@@ -42,7 +42,7 @@ test_that("Adding reaction equations works", {
 })
 
 test_that("Isopath structure matrices work", {
-  expect_error(get_reaction_matrix2("not correct"), "can only get .* from an isopath")
+  expect_error(get_reaction_matrix("not correct"), "can only get .* from an isopath")
   expect_error(get_component_matrix("not correct"), "can only get .* from an isopath")
 
   sys <- isopath() %>%
@@ -65,7 +65,7 @@ test_that("Isopath structure matrices work", {
   )
 
   # reaction matrix
-  expect_equal(sys %>% get_reaction_matrix2(),
+  expect_equal(sys %>% get_reaction_matrix(),
                data_frame(reaction = c("rxn1", "rxn2"),
                           abscissa = c(1,2),
                           flux = c("NULL", "NULL"),
@@ -74,7 +74,7 @@ test_that("Isopath structure matrices work", {
   )
 
   # reaction component matrix
-  expect_equal(sys %>% get_reaction_component_matrix2(),
+  expect_equal(sys %>% get_reaction_component_matrix(),
                data_frame(
                  component = c("W", "X", "Y", "Y", "Z"),
                  abscissa = c(2, 0, 1, 1, 1),
@@ -95,7 +95,7 @@ test_that("Isopath structure matrices work", {
       add_custom_reaction(D == F) %>% # old reactant = new product
       add_custom_reaction(E == A) %>% # new reactant = old product
       add_custom_reaction(B == D) %>% # new product  = old product
-      get_reaction_component_matrix2() %>%
+      get_reaction_component_matrix() %>%
       select(abscissa, component, comp_stoic),
     data_frame(
       abscissa = c(-1, 0, 0, 0, 0, 1, 1, 1, 1, 2),
@@ -156,7 +156,7 @@ test_that("Evaluation works", {
 
   # actual evaluation testing (basic get_reaction_matrix and get_component_matrix tested in structure already)
   # here focus is on the full reaction component, isotope and ode matrix
-  expect_error(get_reaction_component_matrix2(NULL), "can only calculate .* from an isopath")
+  expect_error(get_reaction_component_matrix(NULL), "can only calculate .* from an isopath")
   expect_error(get_reaction_isotope_matrix(NULL), "can only calculate .* from an isopath")
   expect_error(get_ode_matrix(NULL), "can only calculate .* from an isopath")
 
@@ -168,7 +168,7 @@ test_that("Evaluation works", {
 
   ### symbolics first ###
   # reaction component matrix
-  expect_equal(sys %>% get_reaction_component_matrix2(eval = FALSE),
+  expect_equal(sys %>% get_reaction_component_matrix(eval = FALSE),
                data_frame(
                  component = c("X", "Y"),
                  abscissa = c(0, 1),
@@ -203,10 +203,10 @@ test_that("Evaluation works", {
 
   ### numeric evaluation next ###
   # reaction component matrix
-  expect_error(sys %>% get_reaction_component_matrix2(eval = TRUE), "object .* not found")
-  expect_equal(sys %>% get_reaction_component_matrix2(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)),
-               sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>% get_reaction_component_matrix2(eval = TRUE))
-  expect_equal(sys %>% get_reaction_component_matrix2(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)) %>%
+  expect_error(sys %>% get_reaction_component_matrix(eval = TRUE), "object .* not found")
+  expect_equal(sys %>% get_reaction_component_matrix(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)),
+               sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>% get_reaction_component_matrix(eval = TRUE))
+  expect_equal(sys %>% get_reaction_component_matrix(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)) %>%
                  select(-abscissa, -variable, -reaction),
                data_frame(
                  component = c("X", "Y"), comp_stoic = c(-1, 2),

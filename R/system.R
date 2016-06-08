@@ -31,7 +31,7 @@ get_component_matrix <- function(ip, na = "unspecified") {
 #' @family system information
 #' @note TODO: write tests and replace get_reaction_matrix
 #' @export
-get_reaction_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+get_reaction_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
   if (!is(ip, "isopath")) stop ("can only get reaction matrix from an isopath")
 
   lapply(ip$reactions, function(i) {
@@ -56,11 +56,11 @@ get_reaction_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameter
 #' @family system information
 #' @note TODO: write tests and replace get_reaction_component_matrix
 #' @export
-get_reaction_component_matrix2 <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
+get_reaction_component_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,]) {
   if (!is(ip, "isopath")) stop ("can only calculate reaction component matrix from an isopath")
 
   cps <- ip %>% get_component_matrix()
-  rxn <- ip %>% get_reaction_matrix2(eval = evaluate, param = parameters)
+  rxn <- ip %>% get_reaction_matrix(eval = evaluate, param = parameters)
 
   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
 
@@ -117,7 +117,7 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
 
   # component and reaction matrices
   cps <- ip %>% get_component_matrix()
-  rxn <- ip %>% get_reaction_matrix2(eval = evaluate, param = parameters)
+  rxn <- ip %>% get_reaction_matrix(eval = evaluate, param = parameters)
 
   if (nrow(cps) == 0 || nrow (rxn) == 0) return(data_frame())
 
@@ -222,7 +222,7 @@ get_ode_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters[1,])
   }
 
   bind_rows(
-    ip %>% get_reaction_component_matrix2(eval = F) %>%
+    ip %>% get_reaction_component_matrix(eval = F) %>%
       select(x = component, variable, `dx/dt`),
     ip %>% get_reaction_isotope_matrix(eval = F) %>%
       mutate(x = paste0(component, ".", isotope)) %>%
@@ -246,7 +246,7 @@ print.isopath <- function(x, ...) {
   cat("\nCOMPONENTS - ")
   print(x %>% get_component_matrix())
   cat("\nREACTIONS - ")
-  print(x %>% get_reaction_matrix2() %>% select(-flux))
+  print(x %>% get_reaction_matrix() %>% select(-flux))
   cat("\nORDINARY DIFFERENTIAL EQUATIONS - ")
   odes <- x %>% get_ode_matrix(eval = F) %>% select(x, `dx/dt`)
   max_chars <- getOption("width") - max(nchar(odes$x))-15
