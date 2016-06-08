@@ -151,6 +151,15 @@ test_that("Adding parameters works", {
   expect_equal( set_parameters(sys2, X = 100, new = 0.1)$parameters,
                 data_frame(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
 
+  # expand data frame
+  expect_equal(
+    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
+    data_frame(a = rep(1:3, each=6), b = a * rep(c(0.1, 1, 10), t=6), c = rep(c("a", "b"), each=3) %>% rep(times=3) ))
+  expect_equal(
+    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
+    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10)) %>%
+      isocyclr::expand_data_frame(c = c("a", "b")))
+
   # expand parameters
   expect_equal(
     expand_parameters(sys2, Z = c(1,2))$parameters,

@@ -38,26 +38,35 @@ expand_parameters <- function(ip, ...) {
 
   if (!is(ip, "isopath")) stop ("parameters can only be expanded for an isopath")
   if (nrow(ip$parameters) == 0) stop("no parameters set yet for this isopath")
+  ip$parameters <- ip$parameters %>% isocyclr::expand_data_frame(...)
+  return(invisible(ip))
+}
 
-  ldots <- lazy_dots(...)
-  all_params <- names(ip$parameters)
+#' expand data frame
+#' not exported, utility function to expand data frames with non-standard evaluation
+#' used by \code{\link{expand_parameters}}
+#' @param ... use for non standard evaluation
+#' @param .dots use for standard evaluation
+expand_data_frame <- function(df, ..., .dots = list()) {
 
-  ip$parameters <-
-    ip$parameters %>%
+  # dots
+  ldots <- c(lazy_dots(...), .dots)
+
+  # unique row ids
+  df <- df %>% mutate(..rowid = 1:nrow(df))
+
+  df %>%
     # group by everything to get unique sets
-    group_by_ (.dots = all_params) %>%
+    group_by_ (.dots = names(df)) %>%
     # expand for each row
     do({
-      if (nrow(.) != 1) stop("existing parameter sets are not unique and cannot be expanded, please make sure each set of parameters is unique", call. = FALSE)
-      # evaluate the expansion parameters in the data frame
-      # in case it contains derived parameters
+      # evaluate the expansion in the data frame in case it contains derived fields
       lapply(ldots, function(i) lazy_eval(i, data = .)) %>%
         expand.grid(stringsAsFactors = FALSE)
 
     }) %>%
-    ungroup()
-
-  return(invisible(ip))
+    ungroup() %>%
+    select(-..rowid)
 }
 
 #' mutate parameters
