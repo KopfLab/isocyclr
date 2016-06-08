@@ -4,8 +4,10 @@ PKGSRC  := $(shell basename `pwd`)
 
 all: docu install check
 
-docu:
+vignettes:
 	Rscript -e "require(devtools); devtools::build_vignettes()"
+
+docu: vignettes
 	rm -f inst/doc/$(PKGNAME)_$(PKGVERS).pdf
 	R CMD Rd2pdf --no-preview -o inst/doc/$(PKGNAME)_$(PKGVERS).pdf .
 
