@@ -153,12 +153,12 @@ test_that("Adding parameters works", {
 
   # expand data frame
   expect_equal(
-    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
+    isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
     data_frame(a = rep(1:3, each=6), b = a * rep(c(0.1, 1, 10), t=6), c = rep(c("a", "b"), each=3) %>% rep(times=3) ))
   expect_equal(
-    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
-    isocyclr::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10)) %>%
-      isocyclr::expand_data_frame(c = c("a", "b")))
+    isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
+    isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10)) %>%
+      isocyclr:::expand_data_frame(c = c("a", "b")))
 
   # expand parameters
   expect_equal(
