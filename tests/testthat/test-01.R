@@ -73,6 +73,7 @@ test_that("Isopath structure matrices work", {
                           Z = c(NA, -2), W = c(NA, 1))
   )
 
+  # reaction component matrix
   expect_equal(sys %>% get_reaction_component_matrix2(),
                data_frame(
                  component = c("W", "X", "Y", "Y", "Z"),
@@ -85,7 +86,7 @@ test_that("Isopath structure matrices work", {
                  `dx/dt` = c("1 * NULL", "-1 * NULL", "0", "0", "-2 * NULL")
                ))
 
-
+  # more elaborate system
   expect_equal(
     isopath() %>%
       add_component(LETTERS[1:6]) %>%
@@ -152,9 +153,12 @@ test_that("Adding parameters works", {
 })
 
 test_that("Evaluation works", {
-  #expect_error(get_reaction_component_matrix2(NULL), "can only get flux matrix from an isopath")
-  #expect_error(get_reaction_isotope_matrix2(NULL), "can only get flux matrix from an isopath")
-  #expect_error(get_reaction_ode_matrix2(NULL), "can only get flux matrix from an isopath")
+
+  # actual evaluation testing (basic get_reaction_matrix and get_component_matrix tested in structure already)
+  # here focus is on the full reaction component, isotope and ode matrix
+  expect_error(get_reaction_component_matrix2(NULL), "can only calculate .* from an isopath")
+  expect_error(get_reaction_isotope_matrix(NULL), "can only calculate .* from an isopath")
+  expect_error(get_ode_matrix(NULL), "can only calculate .* from an isopath")
 
   sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
@@ -162,34 +166,82 @@ test_that("Evaluation works", {
     add_custom_reaction(X == 2 * Y, flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
     set_parameters(X = 1, X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
 
-  # flux matrix
-  # expect_equal(sys  %>% get_flux_matrix(), data_frame(reaction = "rxn1", flux = "dm"))
-  # expect_equal(sys  %>% get_flux_matrix(eval = TRUE, param = data_frame(dm = 3)), data_frame(reaction = "rxn1", flux = 3))
-  # expect_equal(sys %>% set_parameters(dm = 3) %>%
-  #                get_flux_matrix(eval = TRUE), data_frame(reaction = "rxn1", flux = 3))
+  ### symbolics first ###
+  # reaction component matrix
+  expect_equal(sys %>% get_reaction_component_matrix2(eval = FALSE),
+               data_frame(
+                 component = c("X", "Y"),
+                 abscissa = c(0, 1),
+                 variable = c(TRUE, TRUE),
+                 reaction = c("rxn1", "rxn1"), comp_stoic = c(-1, 2), flux = c("dm", "dm"),
+                 pool_size = c("X", "Y"),
+                 `dx/dt` = c("-1 * dm", "2 * dm")
+               ))
 
-  # flux component summary
-  # FIXME update documentation
+  # reaction isotope matrix
+  expect_equal(sys %>% get_reaction_isotope_matrix(eval = FALSE),
+               data_frame(
+                 isotope = c("C", "C", "N", "N"),
+                 component = c("X", "Y", "X", "Y"),
+                 abscissa = c(0, 1, 0, 1),
+                 variable = c(TRUE, TRUE, TRUE, TRUE),
+                 reaction = c("rxn1", "rxn1", "rxn1", "rxn1"),
+                 comp_stoic = c(-1, 2, -1, 2),
+                 flux = c("dm", "dm", "dm", "dm"),
+                 flux_isotope = c("X.dC", "Y.dC", "dN", "dN"),
+                 pool_size = c("X", "Y", "X", "Y"),
+                 pool_isotope = c("X.C", "Y.C", "X.N", "Y.N"),
+                 `dx/dt` = c("-1 * dm/X * (X.dC - X.C)", "2 * dm/Y * (Y.dC - Y.C)",
+                             "-1 * dm/X * (dN - X.N)", "2 * dm/Y * (dN - Y.N)")))
 
-  # flux isotopes matrix
-  # expected <- data_frame(reaction = "rxn1", isotope = c("N", "N", "C", "C"),
-  #                        component = c("X", "Y", "X", "Y"),
-  #                        flux_isotope = c("dN", "dN", "X.dC", "Y.dC"))
-  # expect_equal(sys  %>% get_flux_isotope_matrix(), expected)
-  # expect_error(sys  %>% get_flux_isotope_matrix(eval = TRUE))
-  # expect_equal(sys  %>%
-  #                get_flux_isotope_matrix(eval = TRUE,
-  #                                        param = data_frame(dN = 0.1, X.dC = 0.4, Y.dC = 0.6)),
-  #              expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
-  # expect_equal(sys %>%
-  #                set_parameters(dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
-  #                get_flux_isotope_matrix(eval = TRUE),
-  #              expected %>% mutate(flux_isotope = c(0.1, 0.1, 0.4, 0.6)))
-  #
-  # expect_equal(sys  %>% set_parameters(dm = 2, dN = 0.1, X.dC = 0.4, Y.dC = 0.6) %>%
-  #                get_ode_matrix(eval = T),
-  #              data_frame(x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"),
-  #                         value = c(1, 1, 1, 1, 1, 1),
-  #                         `dx/dt` = c(-2.0, 1.2, 1.8, 4.0, -1.6, -3.6)))
+  # ode matrix
+  expect_equal(sys %>% get_ode_matrix(eval = FALSE),
+               data_frame(
+                 x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"), value = x,
+                 `dx/dt` = c("-1 * dm", "-1 * dm/X * (X.dC - X.C)", "-1 * dm/X * (dN - X.N)",
+                             "2 * dm", "2 * dm/Y * (Y.dC - Y.C)", "2 * dm/Y * (dN - Y.N)")))
+
+  ### numeric evaluation next ###
+  # reaction component matrix
+  expect_error(sys %>% get_reaction_component_matrix2(eval = TRUE), "object .* not found")
+  expect_equal(sys %>% get_reaction_component_matrix2(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)),
+               sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>% get_reaction_component_matrix2(eval = TRUE))
+  expect_equal(sys %>% get_reaction_component_matrix2(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)) %>%
+                 select(-abscissa, -variable, -reaction),
+               data_frame(
+                 component = c("X", "Y"), comp_stoic = c(-1, 2),
+                 flux = 3, pool_size = c(1, 2),
+                 `dx/dt` = flux*comp_stoic
+               ))
+
+  # reaction isotope matrix
+  expect_error(sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>%  get_reaction_isotope_matrix(eval = TRUE), "object .* not found")
+  params <- data_frame(X = 10, Y = 20, dm = 3, X.C = -1, Y.C = -5, X.N = 0, Y.N = 10, X.dC = 3, Y.dC = 6, dN = 2)
+  expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params),
+               sys %>% set_parameters(params) %>% get_reaction_isotope_matrix(eval = TRUE, param = params))
+  expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params) %>%
+                 select(-abscissa, -variable, -reaction),
+               data_frame(
+                 isotope = c("C", "C", "N", "N"),
+                 component = c("X", "Y", "X", "Y"),
+                 comp_stoic = c(-1, 2, -1, 2),
+                 flux = 3,
+                 flux_isotope = c(3, 6, 2, 2),
+                 pool_size = c(10, 20, 10, 20),
+                 pool_isotope = c(-1, -5, 0, 10),
+                 `dx/dt` = comp_stoic * flux/pool_size * (flux_isotope - pool_isotope)
+               ))
+
+  # ode matrix
+  expect_error(sys %>% get_ode_matrix(eval=T), "object .* not found")
+  expect_equal(sys %>% get_ode_matrix(eval = TRUE, param = params),
+               sys %>% set_parameters(params) %>% get_ode_matrix(eval = TRUE, param = params))
+  expect_equal(sys %>% get_ode_matrix(eval = TRUE, param = params),
+               data_frame(
+                 x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"),
+                 value = c(10, -1, 0, 20, -5, 10),
+                 `dx/dt` = c(-3, -1.2, -0.6, 6, 3.3, -2.4)))
+
+  # expansion: should expand and do a test on a multiple reaction system!
 
 })
