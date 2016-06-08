@@ -6,7 +6,7 @@ test_that("Generating isopath works", {
 
 test_that("Adding isotope works", {
   expect_error(add_isotope("not correct"), "can only be added to an isopath")
-  sys <- isopath()
+  expect_is({sys <- isopath(); sys}, "isopath")
   expect_error( add_isotope(sys, "!@#$"), "only alphanumeric")
   expect_equal( add_isotope(sys, "C")$isotopes %>% names(), "C")
   expect_equal( add_isotope(sys, c("C", "N"))$isotopes %>% names(), c("C", "N"))
@@ -14,7 +14,7 @@ test_that("Adding isotope works", {
 
 test_that("Adding components works", {
   expect_error(add_component("not correct", "A"), "can only be added to an isopath")
-  sys <- isopath() %>% add_isotope("N")
+  expect_is({sys <- isopath() %>% add_isotope("N"); sys}, "isopath")
   expect_error( add_component(sys, "!@#$"), "only alphanumeric")
   expect_equal( add_component(sys, "A")$components %>% names, "A")
   expect_error( add_component(sys, "A", x * N), "cannot parse")
@@ -22,21 +22,23 @@ test_that("Adding components works", {
   expect_equal( add_component(sys, "A", N)$components$A$isotopes, c(N = 1) )
   expect_equal( add_component(sys, "A", 2 * N)$components$A$isotopes, c(N = 2) )
   expect_error( add_component(sys, "A", 2 * N, C), "missing isotope definition" )
-  sys <- sys %>% add_isotope("C")
+  expect_is({sys <- sys %>% add_isotope("C"); sys}, "isopath")
   expect_equal( add_component(sys, "A", 2 * N, C)$components$A$isotopes, c(N = 2, C = 1) )
 })
 
 test_that("Adding reaction equations works", {
   expect_error(add_custom_reaction("not correct"), "can only be added to an isopath")
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("N") %>%
     add_component("A", N) %>%
     add_component("B", N)
+    sys}, "isopath")
   expect_error( add_custom_reaction(sys, A), "please write equation in format")
   expect_equal( add_custom_reaction(sys, A == B)$reactions %>% names(), "rxn1")
   expect_equal( add_custom_reaction(sys, A == B, "my_rxn")$reactions %>% names(), "my_rxn")
   expect_error( add_custom_reaction(sys, A == C), "missing component definition")
-  sys <- sys %>% add_component("C") %>% add_component("D")
+  expect_is({sys <- sys %>% add_component("C") %>% add_component("D"); sys}, "isopath")
   expect_equal( add_custom_reaction(sys, A + 5*B == C + 2*D)$reactions$rxn1$components,
                 c(A = -1, B = -5, C = 1, D = 2))
 })
@@ -45,7 +47,8 @@ test_that("Isopath structure matrices work", {
   expect_error(get_reaction_matrix("not correct"), "can only get .* from an isopath")
   expect_error(get_component_matrix("not correct"), "can only get .* from an isopath")
 
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>%
     add_isotope("N") %>%
     add_component("X", 2 * C, N) %>%
@@ -54,6 +57,7 @@ test_that("Isopath structure matrices work", {
     add_component("W") %>%
     add_custom_reaction(X == 3 * Y) %>%
     add_custom_reaction(Y + 2 * Z == W)
+    sys}, "isopath")
 
   # component matrix
   expect_equal(sys %>% get_component_matrix(),
@@ -113,10 +117,12 @@ test_that("Isopath structure matrices work", {
 })
 
 test_that("Adding reaction flux and isotopes works", {
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>%
     add_component("X", C) %>%
     add_component("Y", C)
+    sys}, "isopath")
   expect_error( add_custom_reaction(sys, X == Y, C = 1), "missing prefix for isotope flux")
   expect_error( add_custom_reaction(sys, X == Y, flux.N = 1), "missing isotope definition")
   expect_error( add_custom_reaction(sys, X == Y, flux.C.abc = 1), "missing component definition")
@@ -132,10 +138,12 @@ test_that("Adding parameters works", {
 
   expect_error(set_parameters("incorrect"), "can only be .* for an isopath")
 
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>%
     add_component("X", C) %>%
     add_component("Y", C)
+    sys}, "isopath")
   expect_equal( {sys2 <- set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4)); sys2$parameters},
                 data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys, X = 1, X.C = 2, Y = 3, Y.C = 4)$parameters,
@@ -166,11 +174,13 @@ test_that("Evaluation works", {
   expect_error(get_reaction_isotope_matrix(NULL), "can only calculate .* from an isopath")
   expect_error(get_ode_matrix(NULL), "can only calculate .* from an isopath")
 
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
     add_custom_reaction(X == 2 * Y, flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
     set_parameters(X = 1, X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
+    sys}, "isopath")
 
   ### symbolics first ###
   # reaction component matrix
@@ -222,7 +232,7 @@ test_that("Evaluation works", {
 
   # reaction isotope matrix
   expect_error(sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>%  get_reaction_isotope_matrix(eval = TRUE), "object .* not found")
-  params <- data_frame(X = 10, Y = 20, dm = 3, X.C = -1, Y.C = -5, X.N = 0, Y.N = 10, X.dC = 3, Y.dC = 6, dN = 2)
+  expect_is({params <- data_frame(X = 10, Y = 20, dm = 3, X.C = -1, Y.C = -5, X.N = 0, Y.N = 10, X.dC = 3, Y.dC = 6, dN = 2); params}, "data.frame")
   expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params),
                sys %>% set_parameters(params) %>% get_reaction_isotope_matrix(eval = TRUE, param = params))
   expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params) %>%
@@ -249,9 +259,11 @@ test_that("Evaluation works", {
                  `dx/dt` = c(-3, -1.2, -0.6, 6, 3.3, -2.4)))
 
   # special case: no isotopes in system
-  sys2 <- isopath() %>%
+  expect_is({
+    sys2 <- isopath() %>%
     add_component( c("X", "Y") ) %>%
     add_custom_reaction(X == 2 * Y)
+    sys2}, "isopath")
   expect_equal(sys2 %>% get_reaction_component_matrix() %>% nrow(), 2)
   expect_equal(sys2 %>% get_reaction_isotope_matrix() %>% nrow(), 0)
 

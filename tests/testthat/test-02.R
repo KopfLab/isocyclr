@@ -25,24 +25,26 @@ test_that("Calculations work", {
 
 test_that("Running model works", {
 
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux.N = dN, flux.X.C = X.dC) %>%
     set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1)
+    sys}, "isopath")
 
   expect_error(run_model("error"), "can only run model for an isopath")
   expect_error(run_model(sys), "time_steps is required")
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* object 'X' not found")
-  sys <- sys %>% set_parameters(transform(sys$parameters, X = c(1, 1)))
+  expect_is({sys <- sys %>% set_parameters(transform(sys$parameters, X = c(1, 1))); sys}, "isopath")
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* there seem to be multiple identical run scenarios")
-  sys <- sys %>% set_parameters(transform(sys$parameters, X = c(1, 2)))
+  expect_is({sys <- sys %>% set_parameters(transform(sys$parameters, X = c(1, 2))); sys}, "isopath")
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* object .* not found")
-  sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10)
+  expect_is({sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10); sys}, "isopath")
   expect_error(run_model(sys, 5), "encountered the following error during pre-check .* some derivatives could not be computed")
-  sys <- sys %>%
+  expect_is({sys <- sys %>%
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC, flux.Y.C = Y.dC) %>%
-    set_parameters(Y.dC = 5)
+    set_parameters(Y.dC = 5); sys}, "isopath")
   expect_message(sys %>% run_model(2), "Running model for 2 scenario(s)*")
   expect_message(sys %>% set_parameters(dm = 0.5) %>% run_model(2), "encountered the following error .* depleted .* pools")
   expect_equal(
@@ -63,18 +65,20 @@ test_that("Running model works", {
 
 test_that("Running steady-state works", {
   # @TODO
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope("C") %>% add_isotope("N") %>%
     add_component("X", C, N) %>% add_component("Y", C, N) %>%
     add_custom_reaction(X == 2.5 * Y, name = "my_rxn", flux = dm, flux.N = dN, flux.X.C = X.dC) %>%
     set_parameters(X.C = 1, X.N = 1, Y = 1, Y.C = 1, Y.N = 1, X.dC = 0)
+    sys}, "isopath")
 
   expect_error(run_steady_state(NULL), "can only run model for an isopath")
   expect_error(run_steady_state(sys), "encountered the following error during pre-check .* object 'X' not found")
   expect_error( sys %>% set_parameters(transform(sys$parameters, X = c(1, 1))) %>% run_steady_state(),
                 "encountered the following error during pre-check .* there seem to be multiple identical run scenarios")
   expect_error(run_steady_state(sys), "encountered the following error during pre-check .* object .* not found")
-  sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10, X = 1)
+  expect_is({sys <- sys %>% set_parameters(dm = 0.1, dN = -5, X.dC = 10, X = 1); sys}, "isopath")
   expect_message(tryCatch(sys %>% set_parameters(dm = -1) %>% run_steady_state(), error = function(e){}), "depleted .* pool")
   expect_error(capture.output(sys %>% set_parameters(dm = -1) %>% run_steady_state()),
                "None of the scenarios could be run to steady-state")

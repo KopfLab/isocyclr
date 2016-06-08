@@ -1,11 +1,13 @@
 context("Standard reactions")
 
 test_that("Testing standard reactions", {
-  sys <- isopath() %>%
+  expect_is({
+    sys <- isopath() %>%
     add_isotope(c("carbon", "nitrogen")) %>%
     add_component("A", carbon, nitrogen) %>%
     add_component("B", carbon, nitrogen) %>%
     add_component("C", carbon)
+    sys}, "isopath")
   expect_error( sys %>% add_standard_reaction(A == D), "missing component definition")
   expect_error( sys %>% add_standard_reaction(A == B + C), "standard reactions can only be 1 to 1 transformations")
 
