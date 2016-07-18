@@ -12,4 +12,8 @@ mutate_parameters(ip, ...)
 \description{
 modify existing parameters with mutate statements
 }
+\seealso{
+Other parameters: \code{\link{expand_parameters}},
+  \code{\link{set_parameters}}
+}
 

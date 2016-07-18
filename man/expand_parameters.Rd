@@ -14,4 +14,8 @@ this expands each existing parameter set with a combinatoric
 expansion of the provided parameters. provided parameters can
 be numeric vectors or expressions that can reference existing parameters
 }
+\seealso{
+Other parameters: \code{\link{mutate_parameters}},
+  \code{\link{set_parameters}}
+}
 

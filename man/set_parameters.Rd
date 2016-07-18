@@ -15,4 +15,8 @@ get_parameters(ip)
 \description{
 to expand on an existing parameter set with multiple variations, use \code{\link{expand_parameters}}
 }
+\seealso{
+Other parameters: \code{\link{expand_parameters}},
+  \code{\link{mutate_parameters}}
+}
 
