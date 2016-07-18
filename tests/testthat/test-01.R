@@ -14,9 +14,12 @@ test_that("Adding isotope works", {
 
 test_that("Adding components works", {
   expect_error(add_component("not correct", "A"), "can only be added to an isopath")
+  # testing stuff for codecov
+  expect_error( add_component(isopath(), "!@#$"), "only alphanumeric component names allowed")
   expect_is({sys <- isopath() %>% add_isotope("N"); sys}, "isopath")
   expect_error( add_component(sys, "!@#$"), "only alphanumeric")
-  expect_equal( add_component(sys, "A")$components %>% names, "A")
+  expect_equal( add_component(sys, "A")$components %>% names(), "A")
+  expect_is( add_component(sys, "A"), "isopath")
   expect_error( add_component(sys, "A", x * N), "cannot parse")
   expect_error( add_component(sys, "A", `%$#`), "cannot parse")
   expect_equal( add_component(sys, "A", N)$components$A$isotopes, c(N = 1) )
@@ -24,6 +27,10 @@ test_that("Adding components works", {
   expect_error( add_component(sys, "A", 2 * N, C), "missing isotope definition" )
   expect_is({sys <- sys %>% add_isotope("C"); sys}, "isopath")
   expect_equal( add_component(sys, "A", 2 * N, C)$components$A$isotopes, c(N = 2, C = 1) )
+})
+
+test_that("Reaction equations are parsed correctly", {
+custom_rxn(A == B)
 })
 
 test_that("Adding reaction equations works", {
