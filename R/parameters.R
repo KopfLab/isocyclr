@@ -3,6 +3,7 @@
 #' to expand on an existing parameter set with multiple variations, use \code{\link{expand_parameters}}
 #'
 #' @param ... parameters, either a whole set of parameters as a single data frame, or a list of individual values, will try to merge with existing parameters and if neceesary overwrite existing parameters with the same name
+#' @family parameters
 #' @export
 set_parameters <- function(ip, ...) {
   if (!is(ip, "isopath")) stop ("parameters can only be set for an isopath")
@@ -33,6 +34,7 @@ set_parameters <- function(ip, ...) {
 #' expansion of the provided parameters. provided parameters can
 #' be numeric vectors or expressions that can reference existing parameters
 #' @param ... named vectors or expressions to expand existing parameter sets
+#' @family parameters
 #' @export
 expand_parameters <- function(ip, ...) {
 
@@ -74,6 +76,7 @@ expand_data_frame <- function(df, ..., .dots = list()) {
 #'
 #' modify existing parameters with mutate statements
 #' @param ... mutate expressions
+#' @family parameters
 #' @export
 mutate_parameters <- function(ip, ...) {
   if (!is(ip, "isopath")) stop ("parameters can only be mutate for an isopath")
