@@ -1,3 +1,70 @@
+
+custom_rxn <- function(equation, flux = NULL, ...) {
+  rxn_(deparse(substitute(equation)),
+                flux = lazy(flux), isotopes = lazy_dots(...),
+                class = "custom")
+}
+
+rxn_ <- function(equation, flux = NULL, isotopes = list(), class = "generic", args = list()) {
+
+  # default abscissa
+  components <- parse_reaction_equation(equation)
+
+  rxn <-
+    structure(
+      list(
+        equation = equation,
+        components = parse_reaction_equation(equation),
+        flux = flux,
+        isotopes = list(),
+        args = args
+      ), class = c(class, "isorxn"))
+
+  # check isotope names for the flux. prefix
+  missing_prefix <- names(isotopes)[!grepl("flux\\.", names(isotopes))]
+  if (length(missing_prefix) > 0)
+    stop("missing prefix for isotope flux, please prefix each flux isotopic composition with 'flux.[<component>.].<isotope> = ...': ", missing_prefix %>% paste(collapse = ", "), call. = FALSE)
+  names(isotopes) <- gsub("flux\\.", "", names(isotopes))
+
+  # parse isotopes list for compound names (isotope.component)
+  isotope.components <- c()
+  for (iso in names(isotopes)) {
+    parts <- strsplit(iso, ".", fixed = TRUE)[[1]]
+    if ( length(parts) == 1) {
+      rxn$isotopes[[parts[1]]] <- isotopes[[iso]]
+    } else if (length(parts) == 2) {
+      isotope.components <- c(isotope.components, parts[1])
+      rxn$isotopes[[parts[2]]][[parts[1]]] <- isotopes[[iso]]
+    } else stop("cannot process compound isotope.component name: ", iso, call. = FALSE)
+  }
+
+  return(rxn)
+}
+
+
+#' @export
+print.isorxn <- function(x, ...) {
+  sprintf(
+    paste0(
+      "Reaction (type '%s'):\n",
+      " - Equation: %s\n",
+      " - Flux: %s\n",
+      " - Isotopic composition of flux:"
+    ), class(x)[1], x$equation, deparse(x$flux$expr)) %>% cat()
+  for (iso in names(x$isotopes)) {
+    if (class(x$isotopes[[iso]]) == "lazy") {
+      sprintf("\n   - %s (for all components): %s", iso,
+              deparse(x$isotopes[[iso]]$expr)) %>% cat()
+    } else {
+      for (comp in names(x$isotopes[[iso]])) {
+        sprintf("\n   - %s (for component %s): %s", iso, comp,
+                deparse(x$isotopes[[iso]][[comp]]$expr)) %>% cat()
+      }
+    }
+  }
+}
+
+
 #' Add a custom reaction
 #'
 #' Anything's allowed for these, just the flux and the isotopic composition of the flux are specified.
