@@ -5,6 +5,9 @@
 #' @docType package
 #' @import dplyr lazyeval deSolve rootSolve ggplot2
 #' @importFrom tidyr gather gather_ extract extract_ spread spread_
+#' @importFrom methods is
+#' @importFrom stats setNames
+#' @importFrom utils modifyList
 NULL
 
 # todo list:

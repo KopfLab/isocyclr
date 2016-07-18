@@ -13,6 +13,7 @@ Roxygen: list(wrap = FALSE)
 URL: https://github.com/sebkopf/isocyclr
 BugReports: https://github.com/sebkopf/isocyclr/issues
 Imports:
+    methods,
     dplyr,
     lazyeval,
     tidyr,

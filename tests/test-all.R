@@ -1,4 +1,4 @@
 library(isocyclr)
-library(magrittr)
+library(dplyr)
 library(testthat)
 test_check("isocyclr")
