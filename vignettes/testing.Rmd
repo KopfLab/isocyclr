@@ -4,6 +4,7 @@ output: html_document
 ---
 
 ```{r}
+library(isocyclr)
 library(magrittr)
 library(ggplot2)
 hayes <- isopath() %>% 
