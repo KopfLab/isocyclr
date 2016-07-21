@@ -276,10 +276,16 @@ test_that("Evaluation works", {
 
   # special case: no isotopes in system
   sys2 <- isopath() %>%
-  add_component( c("X", "Y") ) %>%
+    add_component( c("X", "Y") ) %>%
     add_custom_reaction(X == 2 * Y)
   expect_is(sys2, "isopath")
   expect_equal(sys2 %>% get_reaction_component_matrix() %>% nrow(), 2)
+  expect_equal(sys2 %>% get_reaction_component_matrix(),
+               data_frame(
+                 component = c("X", "Y"), abscissa = c(0, 1), variable = TRUE,
+                 reaction = "rxn1", comp_stoic = c(-1, 2), flux = "NULL",
+                 pool_size = c("X", "Y"), `dx/dt` = c("-1 * NULL", "2 * NULL")
+               ))
   expect_equal(sys2 %>% get_reaction_isotope_matrix() %>% nrow(), 0)
 
   # expansion: should expand and do a test on a multiple reaction system!

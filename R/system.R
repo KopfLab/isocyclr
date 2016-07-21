@@ -19,14 +19,15 @@ isopath <- function() {
 get_component_matrix <- function(ip, na = "unspecified") {
   if (!is(ip, "isopath")) stop ("can only get component matrix from an isopath")
   lapply(ip$components, function(i) {
-    if ( length(i$isotopes) == 0 && is.null(na) ) {
-      list(component = i$name, variable = i$variable)
-    } else if ( length(i$isotopes) == 0 && !is.null(na) ) {
-      c(list(component = i$name, variable = i$variable), setNames(1, na))
-    } else {
-      c(list(component = i$name, variable = i$variable), as.list(i$isotopes))
-    } %>% as_data_frame()
-
+    comp <-
+      if ( length(i$isotopes) == 0 && is.null(na) ) {
+        list(component = i$name, variable = i$variable)
+      } else if ( length(i$isotopes) == 0 && !is.null(na) ) {
+        c(list(component = i$name, variable = i$variable), setNames(1, na))
+      } else {
+        c(list(component = i$name, variable = i$variable), as.list(i$isotopes))
+      }
+    comp %>% as_data_frame()
   }) %>%
     bind_rows()
 }
@@ -174,9 +175,10 @@ get_reaction_isotope_matrix <- function(ip, evaluate = FALSE, parameters = ip$pa
   )
 
   # make sure columns exist even if gather didn't gather anything
-  if (is.null(df$isotope)) {
+  if (! "isotope" %in% names(df)) {
     df <- df %>% mutate(isotope = NA, iso_stoic = NA)
   }
+
   # remove listings that don't have component or isotope
   df <- df %>% filter(!is.na(comp_stoic), !is.na(iso_stoic))
 
