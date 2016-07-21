@@ -11,6 +11,19 @@
 #'
 
 
+#' THIS WOULD BE A GREAT FEATURE
+#' TODO For general reactions:
+#' rename everything just add_reaction() which takes reaction object, name and abscissa
+#' instead create functions to make these objects stand_alone:
+#'    - custom_rxn()
+#'    - standard_rxn()
+#'      IMPLEMENT: allow to specifiy approximate = FALSE for the fractionate function, which then proceeds to not do the whole fractionate business (i.e. just does the delta - eps approximation)
+#'    - mm_rxn()
+#' name, abscissa and isotope checks only happen once you add it to an isopath
+#'    - error if any of the component are missing  (even )
+#'    - just drop the components and isotopes not part of the isopath with a warning
+#'    - error if none of them are added
+
 #' for hays type things
 #' pass in the isotopic composition of the flux INTO the system, make it clear that there
 #' is flux OUT of the system into an external reservoir that is not part of the pathway

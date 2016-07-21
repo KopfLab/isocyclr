@@ -9,9 +9,9 @@ set_parameters <- function(ip, ...) {
   if (!is(ip, "isopath")) stop ("parameters can only be set for an isopath")
 
   ldots <- lazy_dots(...)
-  if (length(list(...)) == 1 && is.data.frame(..1)) {
+  if (length(ldots) == 1 && is.data.frame(df <- lazy_eval(ldots[[1]]))) {
     # overwrite if single data frame passed in
-    ip$parameters <- ..1
+    ip$parameters <- df
   } else if (nrow(ip$parameters) == 0) {
     # overwrite if nothing set yet
     ip$parameters <- data_frame(...)
