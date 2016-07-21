@@ -106,9 +106,9 @@ test_that("Isopath structure matrices work", {
   # more elaborate system
   expect_equal(
     isopath() %>%
-      add_component(LETTERS[1:6]) %>%
+      add_component(c("A", "B", "CC", "D", "E", "F")) %>%
       add_custom_reaction(A == D) %>%
-      add_custom_reaction(A == C) %>% # old reactant = new reactant
+      add_custom_reaction(A == CC) %>% # old reactant = new reactant
       add_custom_reaction(D == F) %>% # old reactant = new product
       add_custom_reaction(E == A) %>% # new reactant = old product
       add_custom_reaction(B == D) %>% # new product  = old product
@@ -116,7 +116,7 @@ test_that("Isopath structure matrices work", {
       select(abscissa, component, comp_stoic),
     data_frame(
       abscissa = c(-1, 0, 0, 0, 0, 1, 1, 1, 1, 2),
-      component = c("E", "A", "A", "A", "B", "D", "C", "D", "D", "F"),
+      component = c("E", "A", "A", "A", "B", "D", "CC", "D", "D", "F"),
       comp_stoic = c(-1, 1, -1, -1, -1, 1, 1, 1, -1, 1))
 
   )
@@ -275,11 +275,10 @@ test_that("Evaluation works", {
                  `dx/dt` = c(-3, -1.2, -0.6, 6, 3.3, -2.4)))
 
   # special case: no isotopes in system
-  expect_is({
-    sys2 <- isopath() %>%
-    add_component( c("X", "Y") ) %>%
+  sys2 <- isopath() %>%
+  add_component( c("X", "Y") ) %>%
     add_custom_reaction(X == 2 * Y)
-    sys2}, "isopath")
+  expect_is(sys2, "isopath")
   expect_equal(sys2 %>% get_reaction_component_matrix() %>% nrow(), 2)
   expect_equal(sys2 %>% get_reaction_isotope_matrix() %>% nrow(), 0)
 
