@@ -49,7 +49,7 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
   # grouping parameters (relevant if data_y provided):
   grouping <- setdiff(names(components_xy), c("isotope", "component", "variable", "x", "y"))
 
-  # reaction lines (offset for parallel reaction lines)
+  # rxn components (+horizontal alignment)
   rxn_components_xy <-
     left_join(
       general_x %>% select(reaction, component, isotope, comp_stoic, x),
@@ -64,19 +64,41 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
     ungroup()
 
   # arrow location (% along the line)
-  location <- 0.75
+  location <- 0.65
 
+  ## FIXME:
+  ## need to implement way to do the x alignment properly for reverse reactions
+  ## approach: do x adjustment BEFORE y calculation BUT for y calculation take
+  ## into consideration not just the ys on the current x but all arrows that are
+  ## either ending or reaching past this interval and use that as the # of ys
+  ## - additionally, for the y calculation, consider looping through x from left
+  ## to right and using the arrow origins on the left as the average y to start the
+  ## new y stack from
+  ## - additionally, do proper y offset for parallel arrows in opposite direction
+  ## - additionally, sort y stack by the order the user has added the componente
+  ## (not just alphabetically blind)
+
+  # reaction lines (offset for parallel reaction lines)
   rxns_xy <-
     inner_join(
       rxn_components_xy %>% filter(comp_stoic > 0) %>% rename(xstart = x, ystart = y),
       rxn_components_xy %>% filter(comp_stoic < 0) %>% rename(xend = x, yend = y),
       by = c("reaction", "isotope", grouping)
     ) %>%
+    # inverted x and y to also align reverse reactions
+    mutate(
+      xstart_grp = ifelse(xstart > xend, xend, xstart),
+      xend_grp = ifelse(xstart > xend, xstart, xend),
+      ystart_grp = ifelse(ystart > yend, yend, ystart),
+      yend_grp = ifelse(ystart > yend, ystart, yend)
+    ) %>%
     # ofset for parallel lines
-    group_by(isotope, xstart, ystart, xend, yend) %>%
+    group_by(isotope, xstart_grp, ystart_grp, xend_grp, yend_grp) %>%
     arrange(reaction) %>%
     # offset in y direction depending on multi-line reactions
-    mutate(y_offset = 0.05 * seq(-n()+1, n()-1, length.out = n())) %>%
+    mutate(
+      y_scale = max(c(ystart, yend)) - min(c(ystart, yend)),
+      y_offset = 0.02 * (y_scale + 1) * seq(-n()+1, n()-1, length.out = n())) %>%
     ungroup() %>%
     mutate(
       ystart = ystart + y_offset,
@@ -134,7 +156,8 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
 
   p +
     geom_label(
-      data = rxn_components_xy %>% select(component, isotope, x, y, variable) %>% unique(), hjust = 0.5,
+      data = rxn_components_xy %>% select(component, isotope, x, y, variable) %>% unique(),
+      hjust = 0.5, label.padding = unit(0.6, "lines"),
       map = aes(x, y, label = component,
                 fill = ifelse(variable, "variable", "fixed"))) +
     facet_grid(isotope~.) +
