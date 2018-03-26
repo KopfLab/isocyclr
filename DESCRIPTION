@@ -7,7 +7,8 @@ Author: Sebastian Kopf
 Maintainer: Sebastian Kopf <seb.kopf@gmail.com>
 Description: This package facilitates the modeling of isotopic effects through
     biogeochemical pathways and cycles including non-steady state and steady-state
-    solutions.
+    solutions. This project was inspired by the life and work of John Hayes and is
+    dedicatd to his memory.
 License: GPL-3
 Roxygen: list(wrap = FALSE)
 URL: https://github.com/sebkopf/isocyclr
