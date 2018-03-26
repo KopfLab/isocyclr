@@ -138,7 +138,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
       })
 
       # output
-      return(as.data.frame(sln))
+      as.data.frame(sln)
 
     }) %>%
     ungroup()
@@ -202,7 +202,7 @@ run_steady_state <- function(ip, ...) {
       })
 
       # output
-      return(sln)
+      sln
 
     }) %>%
     ungroup()
