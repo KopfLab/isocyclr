@@ -12,4 +12,3 @@ run_steady_state(ip, ...)
 \description{
 Reports the time required to reach steady-state (in model time, with dt=1) and creates <variable>.t0 columns for each state variable. Uses \link{runsteady} internally for greatest flexibility although \link{stode} can work for some reaction systems and would be a little faster.
 }
-

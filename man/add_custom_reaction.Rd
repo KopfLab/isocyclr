@@ -4,8 +4,14 @@
 \alias{add_custom_reaction}
 \title{Add a custom reaction}
 \usage{
-add_custom_reaction(ip, equation, name = default_rxn_name(ip), flux = NULL,
-  ..., abscissa = NULL)
+add_custom_reaction(
+  ip,
+  equation,
+  name = default_rxn_name(ip),
+  flux = NULL,
+  ...,
+  abscissa = NULL
+)
 }
 \arguments{
 \item{ip}{An \link{isopath} object to which this reaction should be added.}
@@ -30,6 +36,7 @@ Anything's allowed for these, just the flux and the isotopic composition of the 
 Under the hood, this uses the standard evaluation function \link{add_reaction_}, which can be used directly if needed.
 }
 \seealso{
-Other reaction functions: \code{\link{add_standard_reaction}}
+Other reaction functions: 
+\code{\link{add_standard_reaction}()}
 }
-
+\concept{reaction functions}

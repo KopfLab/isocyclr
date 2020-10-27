@@ -13,9 +13,10 @@ get_component_matrix(ip, na = "unspecified")
 get the component matrix for an isopath
 }
 \seealso{
-Other system information: \code{\link{get_ode_matrix}},
-  \code{\link{get_reaction_component_matrix}},
-  \code{\link{get_reaction_isotope_matrix}},
-  \code{\link{get_reaction_matrix}}
+Other system information: 
+\code{\link{get_ode_matrix}()},
+\code{\link{get_reaction_component_matrix}()},
+\code{\link{get_reaction_isotope_matrix}()},
+\code{\link{get_reaction_matrix}()}
 }
-
+\concept{system information}

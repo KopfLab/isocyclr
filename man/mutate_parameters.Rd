@@ -13,7 +13,8 @@ mutate_parameters(ip, ...)
 modify existing parameters with mutate statements
 }
 \seealso{
-Other parameters: \code{\link{expand_parameters}},
-  \code{\link{set_parameters}}
+Other parameters: 
+\code{\link{expand_parameters}()},
+\code{\link{set_parameters}()}
 }
-
+\concept{parameters}

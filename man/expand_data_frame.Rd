@@ -18,4 +18,3 @@ expand data frame
 utility function to expand data frames with non-standard evaluation
 used by \code{\link{expand_parameters}}
 }
-

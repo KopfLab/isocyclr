@@ -12,4 +12,3 @@ parse reaction equation into its components
 \note{
 standard evaluation
 }
-

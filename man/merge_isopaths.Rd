@@ -9,4 +9,3 @@ merge_isopaths(...)
 \description{
 Merge multiple isopaths
 }
-

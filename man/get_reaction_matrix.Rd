@@ -18,9 +18,10 @@ get the reaction matrix for an isopath
 TODO: write tests and replace get_reaction_matrix
 }
 \seealso{
-Other system information: \code{\link{get_component_matrix}},
-  \code{\link{get_ode_matrix}},
-  \code{\link{get_reaction_component_matrix}},
-  \code{\link{get_reaction_isotope_matrix}}
+Other system information: 
+\code{\link{get_component_matrix}()},
+\code{\link{get_ode_matrix}()},
+\code{\link{get_reaction_component_matrix}()},
+\code{\link{get_reaction_isotope_matrix}()}
 }
-
+\concept{system information}

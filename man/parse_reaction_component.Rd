@@ -17,4 +17,3 @@ pulls out the stoichiometry and component
 \note{
 standard evaluation
 }
-

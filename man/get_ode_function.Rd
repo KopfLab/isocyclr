@@ -9,4 +9,3 @@ get_ode_function(ip)
 \description{
 get ode derivative
 }
-

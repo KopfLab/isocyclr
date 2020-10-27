@@ -18,9 +18,10 @@ Get the system of ordinary differential equations
 TODO: write tests and replace all the get_flux... functions!!
 }
 \seealso{
-Other system information: \code{\link{get_component_matrix}},
-  \code{\link{get_reaction_component_matrix}},
-  \code{\link{get_reaction_isotope_matrix}},
-  \code{\link{get_reaction_matrix}}
+Other system information: 
+\code{\link{get_component_matrix}()},
+\code{\link{get_reaction_component_matrix}()},
+\code{\link{get_reaction_isotope_matrix}()},
+\code{\link{get_reaction_matrix}()}
 }
-
+\concept{system information}

@@ -12,34 +12,46 @@ vignette: >
 Load **isocyclr** and other packages used in these examples. Help on all functions is available within R (e.g. via `?add_standard_reaction`).
 
 ```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
 library(isocyclr)
-library(ggplot2)
-library(magrittr)
-library(dplyr)
-library(tidyr)
 ```
 
 ## Set up reaction path
 
 Set up a reaction network akin to Figure 2 in John Hayes' classic *Fractionation of carbon and hydrogen isotopes in biosynthetic processes. Rev Mineral Geochem 43, 225–277. (2001)*.
 
+```{r echo=FALSE, eval=TRUE, out.width="100%"}
+knitr::include_graphics("https://user-images.githubusercontent.com/5498966/97322754-b7becc00-1835-11eb-9214-339f8be22038.png")
+```
+
 ```{r}
 path <- isopath() %>% 
-  add_isotope("carbon") %>% 
-  add_component("AA", carbon, variable = FALSE) %>% 
-  add_component(LETTERS[2:9], carbon) %>% # add B through I
-  add_component(c("DD", "GG", "II"), carbon, variable = FALSE) %>% # out flux
-  add_standard_reaction(AA == B, eps.carbon = e1, flux = dm) %>% 
-  add_standard_reaction(B == C, eps.carbon = e2, flux = dm) %>% 
-  add_standard_reaction(C == D, eps.carbon = e3, flux = f3 * dm) %>% 
-  add_standard_reaction(D == DD, eps.carbon = 0, flux = f3 * dm, name = "D out") %>% 
-  add_standard_reaction(C == E, eps.carbon = e4, flux = (1-f3) * dm) %>% 
-  add_standard_reaction(E == F, eps.carbon.eq = e5, flux = (1-f3) *dm, eq_ratio = "P/S") %>%
-  add_standard_reaction(F == G, eps.carbon = e6, flux = (1-f3) *f6 * dm) %>% 
-  add_standard_reaction(G == GG, eps.carbon = 0, flux = (1-f3) *f6 * dm, name = "G out") %>% 
-  add_standard_reaction(F == H, eps.carbon = e7, flux = (1-f3) * (1-f6) * dm) %>% 
-  add_standard_reaction(H == I, eps.carbon = e8, flux = (1-f3) * (1-f6) * dm) %>% 
-  add_standard_reaction(I == II, eps.carbon = 0, flux = (1-f3) * (1-f6) * dm, name = "I out") 
+  add_isotope("carbon") %>% # system uses carbon isotopes
+  add_component("A", carbon, variable = FALSE) %>% # infinite reservoir
+  add_component(LETTERS[2:9], carbon) %>% # nodes B through I
+  add_component(c("Dsink", "Gsink", "Isink"), carbon, variable = FALSE) %>% # out pools
+  add_standard_reaction( # A->B
+    A == B, eps.carbon = e1, flux = dm, name = "rxn 1") %>% 
+  add_standard_reaction( # B->C
+    B == C, eps.carbon = e2, flux = dm, name = "rxn 2") %>% 
+  add_standard_reaction( # C->D
+    C == D, eps.carbon = e3, flux = f3 * dm, name = "rxn 3") %>% 
+  add_standard_reaction( # D->sink
+    D == Dsink, eps.carbon = 0, flux = f3 * dm, name = "to D sink") %>% 
+  add_standard_reaction( # C->E
+    C == E, eps.carbon = e4, flux = (1-f3) * dm, name = "rxn 4") %>% 
+  add_standard_reaction( # E equilibrates with F
+    E == F, eps.carbon.eq = e5, flux = (1-f3) *dm, name = "rxn 5", eq_ratio = "P/S") %>%
+  add_standard_reaction( # F->G
+    F == G, eps.carbon = e6, flux = (1-f3) *f6 * dm, name = "rxn 6") %>% 
+  add_standard_reaction( # G->sink
+    G == Gsink, eps.carbon = 0, flux = (1-f3) *f6 * dm, name = "to G sink") %>% 
+  add_standard_reaction( # F->H
+    F == H, eps.carbon = e7, flux = (1-f3) * (1-f6) * dm, name = "rxn 7") %>% 
+  add_standard_reaction( # H->I
+    H == I, eps.carbon = e8, flux = (1-f3) * (1-f6) * dm, name = "rxn 8") %>% 
+  add_standard_reaction( # I->sink
+    I == Isink, eps.carbon = 0, flux = (1-f3) * (1-f6) * dm, name = "to I sink") 
 ```
 
 #### Schematic
@@ -62,21 +74,23 @@ path %>% get_ode_matrix() %>% knitr::kable()
 The symbols used in reaction network setup can be assigned numeric values (multiple scenarios if needed) that get evaluated upon running the model.
 
 ```{r}
-path <- path %>% 
-  set_parameters(
-    data_frame(
-      scenario = c("low flux", "high flux"),
-      # fluxes and flux fractions
-      dm = c(0.1, 1), f3 = 0.2, f6 = 0.2,
-      # isotopic effects
-      e1 = 0, e2 = 25, e3 = 15, e4 = 35, e5 = 8, e6 = 20, e7 = 0, e8 = 14,
-      # starting isotopic composition
-      AA.carbon = 0, B.carbon = 0, C.carbon = 0, D.carbon = 0, E.carbon = 0, 
-      F.carbon = 0, G.carbon = 0, H.carbon = 0, I.carbon = 0,
-      # pool sizes for variable components
-      B = 10, C = 1, D = 20, E = 10, F = 50, G = 20, H = 10, I = 1
-      )
-  ) 
+# consider 2 scenarios, high and low flux
+params <- tibble(
+  scenario = c("low flux", "high flux"),
+  # fluxes and flux fractions
+  dm = c(0.1, 1), f3 = 0.2, f6 = 0.2,
+  # isotopic effects
+  e1 = 0, e2 = 25, e3 = 15, e4 = 35, e5 = 8, e6 = 20, e7 = 0, e8 = 14,
+  # starting isotopic composition
+  A.carbon = 0, B.carbon = 0, C.carbon = 0, D.carbon = 0, E.carbon = 0, 
+  F.carbon = 0, G.carbon = 0, H.carbon = 0, I.carbon = 0,
+  # pool sizes for variable components
+  B = 10, C = 1, D = 20, E = 10, F = 50, G = 20, H = 10, I = 1
+)
+params %>% knitr::kable()
+
+# set parameters for the iso path
+path <- path %>% set_parameters(params) 
 ```
 
 ## Run model
@@ -91,9 +105,11 @@ model <- path %>% run_model(time_steps = 500)
 
 ```{r time_course, fig.width = 8, fig.height = 6}
 model %>% 
-  gather(reservoir, delta, ends_with("carbon")) %>%
-  ggplot() + aes(time, delta, color = reservoir) +
-  geom_line() + theme_bw() +
+  pivot_longer(names_to = "reservoir", values_to = "delta", ends_with("carbon")) %>%
+  ggplot() + 
+  aes(time, delta, color = reservoir) +
+  geom_line() + 
+  theme_bw() +
   labs(y = expression(delta*13*'C')) +
   facet_grid(~scenario)
 ```
@@ -104,11 +120,14 @@ Additional parameters can be passed and will be forwarded to the ode solver, e.g
 
 ```{r time_course_event, fig.width = 8, fig.height = 6}
 model2 <- path %>% run_model(
-  time_steps = 500, make_state_var = c("AA.carbon"),
-  events = list(data = data.frame(
-    var = "AA.carbon", time = 250, value = 10, method = "rep")))
+  time_steps = 500, 
+  make_state_var = c("A.carbon"),
+  events = list(
+    data = data.frame(var = "A.carbon", time = 250, value = 10, method = "rep"))
+  )
+
 last_plot() %+% 
-  gather(model2, reservoir, delta, ends_with("carbon"))
+  pivot_longer(model2, names_to = "reservoir", values_to = "delta", ends_with("carbon"))
 ```
 
 ## Run to steady state
@@ -125,8 +144,9 @@ Looking at the steady state results, there is no difference between low and high
 
 ```{r steady_state, fig.width = 8, fig.height = 6}
 path %>% generate_reaction_diagram(
-  steady %>% gather(component, y, ends_with("carbon")) %>% 
-    mutate(component = sub(".carbon", "", component, fixed = T)) %>% 
+  steady %>% 
+    pivot_longer(names_to = "component", values_to = "y", ends_with("carbon")) %>% 
+    mutate(component = str_remove(component, ".carbon")) %>% 
     select(scenario, component, y)
 ) + facet_grid(~scenario)
 ```
@@ -135,15 +155,18 @@ Changing the the branching flux at nodes however, does change the outcome as exp
 
 ```{r}
 steady2 <- path %>% 
-  set_parameters(scenario = c("low D/E branching ratio", "high D/E branching ratio"),
-                 dm = c(1, 1), f3 = c(0.2, 0.9)) %>% 
+  set_parameters(
+    scenario = c("low D/E branching ratio", "high D/E branching ratio"),
+    dm = c(1, 1), f3 = c(0.2, 0.9)
+  ) %>% 
   run_steady_state(stol = 1e-5, rtol = 1e-3)
 ```
 
 ```{r steady_state_branching, fig.width = 8, fig.height = 6}
 path %>% generate_reaction_diagram(
-  steady2 %>% gather(component, y, ends_with("carbon")) %>% 
-    mutate(component = sub(".carbon", "", component, fixed = T)) %>% 
+  steady2 %>% 
+    pivot_longer(names_to = "component", values_to = "y", ends_with("carbon")) %>% 
+    mutate(component = str_remove(component, ".carbon")) %>% 
     select(scenario, component, y)
 ) + facet_grid(~scenario)
 ```

@@ -9,4 +9,3 @@ default_rxn_name(ip)
 \description{
 get default reaction name
 }
-

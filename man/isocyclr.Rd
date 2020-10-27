@@ -3,7 +3,6 @@
 \docType{package}
 \name{isocyclr}
 \alias{isocyclr}
-\alias{isocyclr-package}
 \title{Model isotope fractionation in biogeochemical cycles and pathways}
 \description{
 This package facilitates the modeling of isotopic effects through biogeochemical pathways and cycles including non-steady state and steady-state solutions.
@@ -11,4 +10,3 @@ This package facilitates the modeling of isotopic effects through biogeochemical
 \author{
 Sebastian Kopf
 }
-

@@ -9,4 +9,3 @@ get_ode_expression(ip)
 \description{
 compile the ODE expression for the isopath
 }
-

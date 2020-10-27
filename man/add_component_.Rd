@@ -12,4 +12,3 @@ add isotopes to a component
 \note{
 standard evaluation
 }
-

@@ -14,4 +14,3 @@ generate_reaction_diagram(ip, y_data = NULL, add_arrows = FALSE)
 \description{
 plot reaction diagram
 }
-

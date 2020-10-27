@@ -16,4 +16,3 @@ run_model(ip, time_steps, ..., make_state_var = c())
 \description{
 Run it for a certain number of time steps.
 }
-

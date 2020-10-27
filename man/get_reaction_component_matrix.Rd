@@ -4,8 +4,11 @@
 \alias{get_reaction_component_matrix}
 \title{get the combined reaction_component_matrix}
 \usage{
-get_reaction_component_matrix(ip, evaluate = FALSE,
-  parameters = ip$parameters[1, ])
+get_reaction_component_matrix(
+  ip,
+  evaluate = FALSE,
+  parameters = ip$parameters[1, ]
+)
 }
 \arguments{
 \item{evaluate}{if TRUE, tries to evaluate the expressions stored for the different fluxes (requires parameters provided)}
@@ -19,9 +22,10 @@ if \code{evaluate = TRUE}, excludes components that are not variable
 TODO: write tests and replace get_reaction_component_matrix
 }
 \seealso{
-Other system information: \code{\link{get_component_matrix}},
-  \code{\link{get_ode_matrix}},
-  \code{\link{get_reaction_isotope_matrix}},
-  \code{\link{get_reaction_matrix}}
+Other system information: 
+\code{\link{get_component_matrix}()},
+\code{\link{get_ode_matrix}()},
+\code{\link{get_reaction_isotope_matrix}()},
+\code{\link{get_reaction_matrix}()}
 }
-
+\concept{system information}

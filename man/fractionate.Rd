@@ -4,8 +4,13 @@
 \alias{fractionate}
 \title{Fractionate a delta value}
 \usage{
-fractionate(delta, alpha = NULL, epsilon = NULL, permil = TRUE,
-  multiply = FALSE)
+fractionate(
+  delta,
+  alpha = NULL,
+  epsilon = NULL,
+  permil = TRUE,
+  multiply = FALSE
+)
 }
 \arguments{
 \item{delta}{The delta value (has to be in permil if \code{permil = TRUE})}
@@ -35,4 +40,3 @@ fractionation.
 \note{
 This function uses standard evaluation.
 }
-

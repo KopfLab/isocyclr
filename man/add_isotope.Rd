@@ -12,4 +12,3 @@ add_isotope(ip, name)
 \description{
 Add an isotope
 }
-

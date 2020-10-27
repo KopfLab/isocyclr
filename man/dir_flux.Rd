@@ -26,4 +26,3 @@ reversibility.
 \note{
 This function uses standard evaluation.
 }
-

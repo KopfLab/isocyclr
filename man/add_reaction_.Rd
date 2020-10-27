@@ -4,8 +4,16 @@
 \alias{add_reaction_}
 \title{add reaction with standard evaluation}
 \usage{
-add_reaction_(ip, equation, name, flux, isotopes = list(), abscissa = NULL,
-  class = "generic", args = list())
+add_reaction_(
+  ip,
+  equation,
+  name,
+  flux,
+  isotopes = list(),
+  abscissa = NULL,
+  class = "generic",
+  args = list()
+)
 }
 \arguments{
 \item{flux}{lazy object for later evaluation}
@@ -24,4 +32,3 @@ add reaction with standard evaluation
 \note{
 standard evaluation
 }
-

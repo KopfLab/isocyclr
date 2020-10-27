@@ -13,4 +13,3 @@ calculate default abscissa
 depending on exising reactions, calculate
 where the new reaction should go
 }
-

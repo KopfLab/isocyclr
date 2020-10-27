@@ -4,9 +4,17 @@
 \alias{add_standard_reaction}
 \title{Add a standard single fractionation reaction}
 \usage{
-add_standard_reaction(ip, equation, name = default_rxn_name(ip),
-  flux = NULL, reversibility, ..., permil = TRUE, eq_ratio = c("P/S",
-  "S/P"), abscissa = NULL)
+add_standard_reaction(
+  ip,
+  equation,
+  name = default_rxn_name(ip),
+  flux = NULL,
+  reversibility,
+  ...,
+  permil = TRUE,
+  eq_ratio = c("P/S", "S/P"),
+  abscissa = NULL
+)
 }
 \arguments{
 \item{ip}{An \link{isopath} object to which this reaction should be added.}
@@ -36,6 +44,7 @@ solution for steady state. See \link{calculate_steady_state()} to make use of
 this functionalty.
 }
 \seealso{
-Other reaction functions: \code{\link{add_custom_reaction}}
+Other reaction functions: 
+\code{\link{add_custom_reaction}()}
 }
-
+\concept{reaction functions}
