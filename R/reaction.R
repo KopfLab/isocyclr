@@ -176,6 +176,8 @@ add_standard_reaction <- function(ip, equation, name = default_rxn_name(ip), flu
   }
 
   # determine type for the reaction
+  # TODO: figure out equilibrium equations so that if reaction diagram
+  # is plotted with arrows the reverse reaction has the right arrow direction
   if (missing(reversibility)) {
     if (all(grepl("eq", ff_dots_names))) type <- "EQ" # equilibrium
     else if (!any(grepl("eq", ff_dots_names))) type <- "IR" # irreverisble

@@ -11,6 +11,7 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
   if (length(ip$reactions) == 0 || length(ip$components) == 0)
     stop("need at least two components and one reaction in order to plot the reaction diagram", call. = FALSE)
 
+  # TODO: extract the prepping of a reaction diagramm data frame into a separate function
   # determin x locations for components
   general_x <-
     # combine compnentes and isotopes
@@ -38,13 +39,12 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
   } else {
     components_xy <-
       left_join(
-        general_x %>% select(isotope, component, variable, x),
+        general_x %>% select(isotope, component, variable, x) %>% distinct(),
         y_data,
         by = "component"
       ) %>%
       filter(!is.na(y))
   }
-
 
   # grouping parameters (relevant if data_y provided):
   grouping <- setdiff(names(components_xy), c("isotope", "component", "variable", "x", "y"))
@@ -59,7 +59,8 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
     # move reaction components horizontally to largest x (i.e. the last occurence of a component)
     group_by(component) %>%
     mutate(max_x = max(x)) %>%
-    group_by(component, isotope) %>%
+    ungroup() %>%
+    group_by(!!!purrr::map(grouping, rlang::sym), component, isotope) %>%
     mutate(y = y[x == max_x][1], x = max_x) %>%
     ungroup()
 
@@ -92,7 +93,7 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
       ystart_grp = ifelse(ystart > yend, yend, ystart),
       yend_grp = ifelse(ystart > yend, ystart, yend)
     ) %>%
-    # ofset for parallel lines
+    # offset for parallel lines
     group_by(isotope, xstart_grp, ystart_grp, xend_grp, yend_grp) %>%
     arrange(reaction) %>%
     # offset in y direction depending on multi-line reactions
@@ -156,7 +157,7 @@ generate_reaction_diagram <- function(ip, y_data = NULL, add_arrows = FALSE) {
 
   p +
     geom_label(
-      data = rxn_components_xy %>% select(component, isotope, x, y, variable) %>% unique(),
+      data = rxn_components_xy %>% select(!!!grouping, component, isotope, x, y, variable) %>% unique(),
       hjust = 0.5, label.padding = unit(0.6, "lines"),
       map = aes(x, y, label = component,
                 fill = ifelse(variable, "variable", "fixed"))) +

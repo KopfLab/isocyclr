@@ -8,7 +8,7 @@ check_model <- function(ip) {
 
     # do a sample calculation for each parameter set
     ip$parameters %>%
-      group_by_(.dots = names(ip$parameters)) %>%
+      group_by(!!!purrr::map(names(ip$parameters), rlang::sym)) %>%
       do({
         # safety checks - will through errors if needed
         if (nrow(.) != 1) stop("there seem to be multiple identical run scenarios, please make sure each set of parameters is unique", call. = FALSE)
@@ -122,7 +122,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
   # run each scenario by grouping by each row
   result <-
     ip$parameters %>%
-    group_by_(.dots = names(ip$parameters)) %>%
+    group_by(!!!purrr::map(names(ip$parameters), rlang::sym)) %>%
     do({
       # time steps
       times <- seq(0, lazy_eval(steps_exp, data = .), by = 1)
@@ -145,7 +145,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
 
   if (nrow(result) == 0) stop("None of the scenarios could be computed successfully", call. = FALSE)
 
-  result %>% select_(.dots = c("time",c(state_vars, constants))) %>% return()
+  return(select(result, !!!c("time",c(state_vars, constants))))
 }
 
 #' Run model to steady state
@@ -174,7 +174,7 @@ run_steady_state <- function(ip, ...) {
   # run each scenario by grouping by each row
   result <-
     ip$parameters %>%
-    group_by_(.dots = names(ip$parameters)) %>%
+    group_by(!!!purrr::map(names(ip$parameters), rlang::sym)) %>%
     do({
       sln <- tibble()
       # attempt to solve ODE
@@ -188,7 +188,7 @@ run_steady_state <- function(ip, ...) {
         if (attributes(out)$steady) {
           sln <- bind_cols(
             tibble(time = attributes(out)$time),
-            rename_(., .dots = setNames(state_vars, state_vars_t0))[state_vars_t0], # t0 values
+            rename(., !!!setNames(state_vars, state_vars_t0))[state_vars_t0], # t0 values
             as_tibble(as.list(out$y)) # solutions
           )
         } else {
@@ -209,7 +209,7 @@ run_steady_state <- function(ip, ...) {
 
   if (nrow(result) == 0) stop("None of the scenarios could be run to steady-state.", call. = FALSE)
 
-  result %>% select_(.dots = c("time", state_vars, state_vars_t0, constants)) %>% return()
+  return(select(result, !!!c("time", state_vars, state_vars_t0, constants)))
 }
 
 

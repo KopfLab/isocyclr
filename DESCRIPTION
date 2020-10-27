@@ -1,7 +1,7 @@
 Package: isocyclr
 Type: Package
 Title: Model isotope fractionation in biogeochemical cycles and pathways
-Version: 0.1.4
+Version: 0.1.5
 Date: 2016-01-15
 Author: Sebastian Kopf
 Maintainer: Sebastian Kopf <seb.kopf@gmail.com>
@@ -15,6 +15,7 @@ URL: https://github.com/sebkopf/isocyclr
 BugReports: https://github.com/sebkopf/isocyclr/issues
 Imports:
     methods,
+    rlang,
     dplyr,
     lazyeval,
     tidyr,
@@ -40,4 +41,4 @@ Collate:
     'calculations.R'
     'model.R'
     'steady_state.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 7.1.1

@@ -4,10 +4,11 @@
 #' @author Sebastian Kopf
 #' @docType package
 #' @import dplyr lazyeval deSolve rootSolve ggplot2
-#' @importFrom tidyr gather gather_ extract extract_ spread spread_
+#' @importFrom tidyr gather gather_ extract extract_ spread spread_ pivot_longer
 #' @importFrom methods is
 #' @importFrom stats setNames
 #' @importFrom utils modifyList
+#' @importFrom rlang !! !!!
 NULL
 
 # todo list:

@@ -18,7 +18,7 @@ set_parameters <- function(ip, ...) {
   } else {
     # mutate otherwise
     tryCatch({
-      ip$parameters <- mutate_(ip$parameters, .dots = ldots)
+      ip$parameters <- mutate(ip$parameters, ...)
     },
     error = function(e) {
       stop("something went wrong trying to merge the new parameters with the existing ones: '", e$message, "'.", call. = FALSE)
@@ -60,7 +60,7 @@ expand_data_frame <- function(df, ..., .dots = list()) {
 
   df %>%
     # group by everything to get unique sets
-    group_by_ (.dots = names(df)) %>%
+    group_by(!!!purrr::map(names(df), rlang::sym)) %>%
     # expand for each row
     do({
       # evaluate the expansion in the data frame in case it contains derived fields
@@ -82,10 +82,9 @@ mutate_parameters <- function(ip, ...) {
   if (!is(ip, "isopath")) stop ("parameters can only be mutate for an isopath")
   if (nrow(ip$parameters) == 0) stop("no parameters set yet for this isopath")
 
-  ldots <- lazy_dots(...)
   ip$parameters <-
     ip$parameters %>%
-    mutate_(.dots = ldots)
+    mutate(...)
 
   return(invisible(ip))
 }
