@@ -14,7 +14,7 @@ set_parameters <- function(ip, ...) {
     ip$parameters <- df
   } else if (nrow(ip$parameters) == 0) {
     # overwrite if nothing set yet
-    ip$parameters <- data_frame(...)
+    ip$parameters <- tibble(...)
   } else {
     # mutate otherwise
     tryCatch({

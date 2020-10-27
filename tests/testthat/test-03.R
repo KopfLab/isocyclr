@@ -41,7 +41,7 @@ test_that("Testing standard reactions", {
   # test irreversible system
   expect_equal(sys %>% add_standard_reaction(A == B, alpha.carbon = cff, eps.nitrogen = nff, flux = my_flux) %>%
                  get_ode_matrix(),
-               data_frame(
+               tibble(
                  x = c("A", "A.carbon", "A.nitrogen", "B", "B.carbon", "B.nitrogen"),
                  value = c("A", "A.carbon", "A.nitrogen", "B", "B.carbon", "B.nitrogen"),
                  `dx/dt` = c("-1 * my_flux",
@@ -55,7 +55,7 @@ test_that("Testing standard reactions", {
   # test equilibrium system
   expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon.eq = ceq, flux = my_flux, eq_ratio = "S/P") %>%
                  get_ode_matrix(),
-               data_frame(
+               tibble(
                  x = c("A", "A.carbon", "A.nitrogen", "C", "C.carbon"),
                  value = c("A", "A.carbon", "A.nitrogen", "C", "C.carbon"),
                  `dx/dt` = c(
@@ -73,13 +73,13 @@ test_that("Testing standard reactions", {
   expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
                                            flux = my_flux, reversibility = my_rev) %>%
                  get_reaction_component_matrix() %>% select(reaction, flux),
-               data_frame(reaction = c("rxn1 (forward)", "rxn1 (reverse)", "rxn1 (forward)", "rxn1 (reverse)"),
+               tibble(reaction = c("rxn1 (forward)", "rxn1 (reverse)", "rxn1 (forward)", "rxn1 (reverse)"),
                           flux = c("dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")",
                                    "dir_flux(my_flux, rev = my_rev, dir = \"+\")", "dir_flux(my_flux, rev = my_rev, dir = \"-\")")))
   expect_equal(sys %>% add_standard_reaction(A == C, alpha.carbon = cff.fwd, alpha.carbon.rev = cff.rev,
                                            flux = my_flux, reversibility = my_rev) %>%
                  get_reaction_isotope_matrix() %>% select(isotope, component, reaction, flux_isotope),
-               data_frame(
+               tibble(
                  isotope = c(rep("carbon", 4), rep("nitrogen", 2)),
                  component = rep(c("A", "C", "A"), each = 2),
                  reaction = rep(c("rxn1 (forward)", "rxn1 (reverse)"), times = 3),

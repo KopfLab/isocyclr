@@ -6,7 +6,7 @@ isopath <- function() {
     isotopes = list(),
     components = list(),
     reactions = list(),
-    parameters = data_frame(),
+    parameters = tibble(),
     info = list()
   ), class = "isopath")
 }
@@ -27,7 +27,7 @@ get_component_matrix <- function(ip, na = "unspecified") {
       } else {
         c(list(component = i$name, variable = i$variable), as.list(i$isotopes))
       }
-    comp %>% as_data_frame()
+    comp %>% as_tibble()
   }) %>%
     bind_rows()
 }
@@ -51,7 +51,7 @@ get_reaction_matrix <- function(ip, evaluate = FALSE, parameters = ip$parameters
              } else {
                deparse(i$flux$expr, width.cutoff = 500L) %>% paste0(collapse = "")
              }))%>%
-      as_data_frame()
+      as_tibble()
   }) %>%
     bind_rows()
 }

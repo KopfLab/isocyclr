@@ -19,7 +19,7 @@ check_model <- function(ip) {
                paste(dx_var$x[is.na(dx_var$`dx/dt`)], "=", dx_text[is.na(dx_var$`dx/dt`)]) %>%
                  paste(collapse = ", "), call. = FALSE)
         }
-        data_frame()
+        tibble()
       })
 
   },
@@ -128,7 +128,7 @@ run_model <- function(ip, time_steps, ..., make_state_var = c()) {
       times <- seq(0, lazy_eval(steps_exp, data = .), by = 1)
 
       # attempt to solve ODE
-      sln <- data_frame()
+      sln <- tibble()
       tryCatch({
         sln <- ode(y = unlist(.[state_vars]), times = times, func = func,
                    parms = as.list(.[constants]), ...)
@@ -176,7 +176,7 @@ run_steady_state <- function(ip, ...) {
     ip$parameters %>%
     group_by_(.dots = names(ip$parameters)) %>%
     do({
-      sln <- data_frame()
+      sln <- tibble()
       # attempt to solve ODE
       tryCatch({
         timing <-
@@ -187,9 +187,9 @@ run_steady_state <- function(ip, ...) {
 
         if (attributes(out)$steady) {
           sln <- bind_cols(
-            data_frame(time = attributes(out)$time),
+            tibble(time = attributes(out)$time),
             rename_(., .dots = setNames(state_vars, state_vars_t0))[state_vars_t0], # t0 values
-            as_data_frame(as.list(out$y)) # solutions
+            as_tibble(as.list(out$y)) # solutions
           )
         } else {
           message("WARNING: did not reach steady state (elapsed time: ", signif(timing[['elapsed']], 5), "s) for one parameter set (skipping to the next set of parameters). Run with verbose = TRUE for additional detail.\nParameters: ", paste(names(unlist(.)), "=", unlist(.)) %>% paste(collapse = ", "))

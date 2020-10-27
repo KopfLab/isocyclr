@@ -98,7 +98,7 @@ The symbols used in reaction network setup can be assigned numeric values (multi
 ```{r}
 path <- path %>%
   set_parameters(
-    data_frame(
+    tibble(
       scenario = c("low flux", "high flux"),
       # fluxes and flux fractions
       dm = c(0.1, 1), f3 = 0.2, f6 = 0.2,

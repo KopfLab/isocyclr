@@ -111,7 +111,7 @@ add_standard_reaction <- function(ip, equation, name = default_rxn_name(ip), flu
   # reaction components
   components <-
     parse_reaction_equation(eq) %>%
-    as.list() %>% as_data_frame() %>%
+    as.list() %>% as_tibble() %>%
     gather(component, comp_stoic)
 
   # make sure it's a 1 to 1 reaction
@@ -367,7 +367,7 @@ default_abscissa <- function(ip, new_components) {
   rxns <-
     left_join(
       ip %>% get_reaction_component_matrix(),
-      new_components %>% as.list() %>% as_data_frame() %>% gather(new_component, new_comp_stoic),
+      new_components %>% as.list() %>% as_tibble() %>% gather(new_component, new_comp_stoic),
       by = c("component" = "new_component")
     ) %>%
     select(abscissa, comp_stoic, new_comp_stoic) %>%

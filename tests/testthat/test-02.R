@@ -49,7 +49,7 @@ test_that("Running model works", {
   expect_message(sys %>% set_parameters(dm = 0.5) %>% run_model(2), "encountered the following error .* depleted .* pools")
   expect_equal(
     sys %>% set_parameters(dm = c(0.2, 0.4))  %>%  run_model(2) %>% signif(3),
-    data_frame(
+    tibble(
       X.dC = 10, Y.dC = 5, dN = -5,
       dm = c(0.2, 0.2, 0.2, 0.4, 0.4, 0.4),
       time = c(0, 1, 2, 0, 1, 2),

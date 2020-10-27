@@ -68,14 +68,14 @@ test_that("Isopath structure matrices work", {
 
   # component matrix
   expect_equal(sys %>% get_component_matrix(),
-    data_frame(component = c("X", "Y", "Z", "W"),
+    tibble(component = c("X", "Y", "Z", "W"),
                variable = c(T, F, T, T),
                C = c(2, 1, NA, NA),
                N = c(1, NA, NA, NA),
                unspecified = c(NA, NA, 1, 1))
   )
   expect_equal(sys %>% get_component_matrix(na = NULL),
-               data_frame(component = c("X", "Y", "Z", "W"),
+               tibble(component = c("X", "Y", "Z", "W"),
                           variable = c(T, F, T, T),
                           C = c(2, 1, NA, NA),
                           N = c(1, NA, NA, NA))
@@ -83,7 +83,7 @@ test_that("Isopath structure matrices work", {
 
   # reaction matrix
   expect_equal(sys %>% get_reaction_matrix(),
-               data_frame(reaction = c("rxn1", "rxn2"),
+               tibble(reaction = c("rxn1", "rxn2"),
                           abscissa = c(1,2),
                           flux = c("NULL", "NULL"),
                           X = c(-1, NA), Y = c(3, -1),
@@ -92,7 +92,7 @@ test_that("Isopath structure matrices work", {
 
   # reaction component matrix
   expect_equal(sys %>% get_reaction_component_matrix(),
-               data_frame(
+               tibble(
                  component = c("W", "X", "Y", "Y", "Z"),
                  abscissa = c(2, 0, 1, 1, 1),
                  variable = c(TRUE, TRUE, FALSE, FALSE, TRUE),
@@ -114,7 +114,7 @@ test_that("Isopath structure matrices work", {
       add_custom_reaction(B == D) %>% # new product  = old product
       get_reaction_component_matrix() %>%
       select(abscissa, component, comp_stoic),
-    data_frame(
+    tibble(
       abscissa = c(-1, 0, 0, 0, 0, 1, 1, 1, 1, 2),
       component = c("E", "A", "A", "A", "B", "D", "CC", "D", "D", "F"),
       comp_stoic = c(-1, 1, -1, -1, -1, 1, 1, 1, -1, 1))
@@ -151,17 +151,17 @@ test_that("Adding parameters works", {
     add_component("X", C) %>%
     add_component("Y", C)
     sys}, "isopath")
-  expect_equal( {sys2 <- set_parameters(sys, data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4)); sys2$parameters},
-                data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
+  expect_equal( {sys2 <- set_parameters(sys, tibble(X = 1, X.C = 2, Y = 3, Y.C = 4)); sys2$parameters},
+                tibble(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys, X = 1, X.C = 2, Y = 3, Y.C = 4)$parameters,
-                data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4))
+                tibble(X = 1, X.C = 2, Y = 3, Y.C = 4))
   expect_equal( set_parameters(sys2, X = 100, new = 0.1)$parameters,
-                data_frame(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
+                tibble(X = 100, X.C = 2, Y = 3, Y.C = 4, new = 0.1))
 
   # expand data frame
   expect_equal(
     isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
-    data_frame(a = rep(1:3, each=6), b = a * rep(c(0.1, 1, 10), t=6), c = rep(c("a", "b"), each=3) %>% rep(times=3) ))
+    tibble(a = rep(1:3, each=6), b = a * rep(c(0.1, 1, 10), t=6), c = rep(c("a", "b"), each=3) %>% rep(times=3) ))
   expect_equal(
     isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10), c = c("a", "b")),
     isocyclr:::expand_data_frame(data_frame(a=1:3), b = a*c(0.1, 1, 10)) %>%
@@ -170,10 +170,10 @@ test_that("Adding parameters works", {
   # expand parameters
   expect_equal(
     expand_parameters(sys2, Z = c(1,2))$parameters,
-    data_frame(X = c(1, 1), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4), Z = c(1, 2)))
+    tibble(X = c(1, 1), X.C = c(2, 2), Y = c(3, 3), Y.C = c(4, 4), Z = c(1, 2)))
   expect_equal(
     (sys2 %>% expand_parameters(Z = c(1,2)) %>% expand_parameters(new = 1:3))$parameters,
-    data_frame(X = 1, X.C = 2, Y = 3, Y.C = 4, Z = c(1, 1, 1, 2, 2, 2), new = c(1:3, 1:3)))
+    tibble(X = 1, X.C = 2, Y = 3, Y.C = 4, Z = c(1, 1, 1, 2, 2, 2), new = c(1:3, 1:3)))
 
   # expanding parameters
   expect_error(expand_parameters("correct"), "can only be .* for an isopath")
@@ -201,7 +201,7 @@ test_that("Evaluation works", {
   ### symbolics first ###
   # reaction component matrix
   expect_equal(sys %>% get_reaction_component_matrix(eval = FALSE),
-               data_frame(
+               tibble(
                  component = c("X", "Y"),
                  abscissa = c(0, 1),
                  variable = c(TRUE, TRUE),
@@ -212,7 +212,7 @@ test_that("Evaluation works", {
 
   # reaction isotope matrix
   expect_equal(sys %>% get_reaction_isotope_matrix(eval = FALSE),
-               data_frame(
+               tibble(
                  isotope = c("C", "C", "N", "N"),
                  component = c("X", "Y", "X", "Y"),
                  abscissa = c(0, 1, 0, 1),
@@ -228,7 +228,7 @@ test_that("Evaluation works", {
 
   # ode matrix
   expect_equal(sys %>% get_ode_matrix(eval = FALSE),
-               data_frame(
+               tibble(
                  x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"), value = x,
                  `dx/dt` = c("-1 * dm", "-1 * dm/X * (X.dC - X.C)", "-1 * dm/X * (dN - X.N)",
                              "2 * dm", "2 * dm/Y * (Y.dC - Y.C)", "2 * dm/Y * (dN - Y.N)")))
@@ -240,7 +240,7 @@ test_that("Evaluation works", {
                sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>% get_reaction_component_matrix(eval = TRUE))
   expect_equal(sys %>% get_reaction_component_matrix(eval = TRUE, param = list(X = 1, Y = 2, dm = 3)) %>%
                  select(-abscissa, -variable, -reaction),
-               data_frame(
+               tibble(
                  component = c("X", "Y"), comp_stoic = c(-1, 2),
                  flux = 3, pool_size = c(1, 2),
                  `dx/dt` = flux*comp_stoic
@@ -248,12 +248,12 @@ test_that("Evaluation works", {
 
   # reaction isotope matrix
   expect_error(sys %>% set_parameters(X = 1, Y = 2, dm = 3) %>%  get_reaction_isotope_matrix(eval = TRUE), "object .* not found")
-  expect_is({params <- data_frame(X = 10, Y = 20, dm = 3, X.C = -1, Y.C = -5, X.N = 0, Y.N = 10, X.dC = 3, Y.dC = 6, dN = 2); params}, "data.frame")
+  expect_is({params <- tibble(X = 10, Y = 20, dm = 3, X.C = -1, Y.C = -5, X.N = 0, Y.N = 10, X.dC = 3, Y.dC = 6, dN = 2); params}, "data.frame")
   expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params),
                sys %>% set_parameters(params) %>% get_reaction_isotope_matrix(eval = TRUE, param = params))
   expect_equal(sys %>% get_reaction_isotope_matrix(eval = TRUE, param = params) %>%
                  select(-abscissa, -variable, -reaction),
-               data_frame(
+               tibble(
                  isotope = c("C", "C", "N", "N"),
                  component = c("X", "Y", "X", "Y"),
                  comp_stoic = c(-1, 2, -1, 2),
@@ -269,7 +269,7 @@ test_that("Evaluation works", {
   expect_equal(sys %>% get_ode_matrix(eval = TRUE, param = params),
                sys %>% set_parameters(params) %>% get_ode_matrix(eval = TRUE, param = params))
   expect_equal(sys %>% get_ode_matrix(eval = TRUE, param = params),
-               data_frame(
+               tibble(
                  x = c("X", "X.C", "X.N", "Y", "Y.C", "Y.N"),
                  value = c(10, -1, 0, 20, -5, 10),
                  `dx/dt` = c(-3, -1.2, -0.6, 6, 3.3, -2.4)))
@@ -281,7 +281,7 @@ test_that("Evaluation works", {
   expect_is(sys2, "isopath")
   expect_equal(sys2 %>% get_reaction_component_matrix() %>% nrow(), 2)
   expect_equal(sys2 %>% get_reaction_component_matrix(),
-               data_frame(
+               tibble(
                  component = c("X", "Y"), abscissa = c(0, 1), variable = TRUE,
                  reaction = "rxn1", comp_stoic = c(-1, 2), flux = "NULL",
                  pool_size = c("X", "Y"), `dx/dt` = c("-1 * NULL", "2 * NULL")
